@@ -1,27 +1,29 @@
+require('dotenv').config()
 const { ethers } = require('ethers')
 const express = require('express')
 const app = express()
+app.use(express.json())
 const port = 3000
-require('dotenv').config()
 // const { contracts } = require('./constants')
-const abi = [
-    // Read-Only Functions
-    "function balanceOf(address owner) view returns (uint256)",
-    "function decimals() view returns (uint8)",
-    "function symbol() view returns (string)",
-
-    // Authenticated Functions
-    "function transfer(address to, uint amount) returns (bool)",
-
-    // Events
-    "event Transfer(address indexed from, address indexed to, uint amount)"
+const hubAddress = '0xb77Af0558e1eC1Bb37849B102fef8d1DbB98dfb2';
+const hubABI = [
+  "constructor(address)",
+  "function addLeaf(address,uint8,bytes32,bytes32,tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[3])",
+  "function getLeaves() view returns (uint256[])",
+  "function isFromIssuer(bytes,uint8,bytes32,bytes32,address) pure returns (bool)",
+  "function mostRecentRoot() view returns (uint256)",
+  "function mt() view returns (address)",
+  "function oldLeafUsed(uint256) view returns (bool)",
+  "function router() view returns (address)",
+  "function verifyProof(string,tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[]) view returns (bool)"
 ];
 
-// This can be an address or an ENS name
-const address = "0x764a06fDdcE6b8895b6E7F9ba2874711BF31edEa";
-const erc20_rw = new ethers.Contract(address, abi, signer);
 
-const provider = ethers.getDefaultProvider(network, {
+// // This can be an address or an ENS name
+// const address = "0x764a06fDdcE6b8895b6E7F9ba2874711BF31edEa";
+// const erc20_rw = new ethers.Contract(address, abi, signer);
+
+const provider = ethers.getDefaultProvider(process.env.POCKET_RPCURL, {
     
     // etherscan: YOUR_ETHERSCAN_API_KEY,
     // infura: YOUR_INFURA_PROJECT_ID,
@@ -32,14 +34,43 @@ const provider = ethers.getDefaultProvider(network, {
     // // },
     // alchemy: YOUR_ALCHEMY_API_KEY,
     pocket: {
-      applicationId: '632c778cd7c911003ac58b7b',
+      applicationId: process.env.POCKET_RELAYER_APPID,
       applicationSecretKey: process.env.POCKET_RELAYER_SECRET
     },
     // ankr: YOUR_ANKR_API_KEY
 });
+const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+const hub = new ethers.Contract(hubAddress, hubABI, signer);
+
+const addLeaf = async (callParams) => {
+  console.log("callParams", callParams)
+  const { issuer, v, r, s, zkp, zkpInputs } = callParams;
+  const tx = await hub.addLeaf(
+    issuer, 
+    v, 
+    r, 
+    s, 
+    Object.keys(zkp).map(k=>zkp[k]), // Convert struct to ethers format
+    zkpInputs
+  );
+  await tx.wait();
+  return true;
+}
+// provider.getBalance('0xC8834C1FcF0Df6623Fc8C8eD25064A4148D99388').then(b=>console.log(b))
 
 app.get('/', (req, res) => {
-  res.send('Hello World!')
+  res.send('For this endpoint, POST your addLeaf parameters to /addLeaf and it will submit an addLeaf() transaction to Hub')
+})
+
+app.post('/addLeaf', async (req, res) => {
+  // console.log(...args);
+  try {
+    await addLeaf(req.body.addLeafArgs);
+  } catch(e) {
+    res.send(e);
+    return
+  }
+  res.sendStatus(200);
 })
 
 app.listen(port, () => {
