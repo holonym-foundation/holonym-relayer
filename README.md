@@ -1,6 +1,6 @@
 
 # How to use relayer
-`RELAYER_URL` is _______
+`RELAYER_URL` is https://relayer.holonym.id
 
 `issuer` is the address of the credential issuer
 
