@@ -12,7 +12,7 @@
 
 ```
 const axios = require("axios");
-const res = await axios.post(`$RELAYER_URL/addLeaf`, {
+const res = await axios.post(`${RELAYER_URL}/addLeaf`, {
             addLeafArgs: {
                 issuer : ISSUER_ADDRESS, 
                 v : SIGV, 
