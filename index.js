@@ -54,7 +54,7 @@ const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 const hub = new ethers.Contract(hubAddress, hubABI, signer);
 
 const addLeaf = async (callParams) => {
-  // console.log("callParams", callParams)
+//  console.log("callParams", callParams)
   const { issuer, v, r, s, zkp, zkpInputs } = callParams;
   const tx = await hub.addLeaf(
     issuer, 
@@ -73,13 +73,13 @@ app.get('/', (req, res) => {
   res.send('For this endpoint, POST your addLeaf parameters to /addLeaf and it will submit an addLeaf() transaction to Hub')
 })
 
-app.post('/addLeaf', async (req, res) => {
+app.post('/addLeaf', async (req, res, next) => {
   // console.log(...args);
   try {
     await addLeaf(req.body.addLeafArgs);
   } catch(e) {
-    res.send(e);
-    return
+    res.status(400).send(e);
+    return;
   }
   res.sendStatus(200);
 })
