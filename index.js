@@ -2,8 +2,17 @@ require('dotenv').config()
 const { ethers } = require('ethers')
 const express = require('express')
 const app = express()
-app.use(express.json())
-const port = 3000
+const cors = require('cors')
+
+const corsOpts = {
+  origin: ["https://holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
+  optionsSuccessStatus: 200 // For legacy browser support
+}
+
+app.use(cors(corsOpts));
+app.use(express.json());
+
+const port = 3000;
 // const { contracts } = require('./constants')
 const hubAddress = "0x6A78dF871291627C5470F7a768745C3ff05741F2";
 const hubABI = [
