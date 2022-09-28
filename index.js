@@ -5,7 +5,7 @@ const app = express()
 app.use(express.json())
 const port = 3000
 // const { contracts } = require('./constants')
-const hubAddress = '0xb77Af0558e1eC1Bb37849B102fef8d1DbB98dfb2';
+const hubAddress = "0x6A78dF871291627C5470F7a768745C3ff05741F2";
 const hubABI = [
   "constructor(address)",
   "function addLeaf(address,uint8,bytes32,bytes32,tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[3])",
@@ -23,27 +23,29 @@ const hubABI = [
 // const address = "0x764a06fDdcE6b8895b6E7F9ba2874711BF31edEa";
 // const erc20_rw = new ethers.Contract(address, abi, signer);
 
-const provider = ethers.getDefaultProvider(process.env.POCKET_RPCURL, {
+// const provider = ethers.getDefaultProvider(process.env.ALCHEMY_RPCURL, {
     
-    // etherscan: YOUR_ETHERSCAN_API_KEY,
-    // infura: YOUR_INFURA_PROJECT_ID,
-    // // Or if using a project secret:
-    // // infura: {
-    // //   projectId: YOUR_INFURA_PROJECT_ID,
-    // //   projectSecret: YOUR_INFURA_PROJECT_SECRET,
-    // // },
-    // alchemy: YOUR_ALCHEMY_API_KEY,
-    pocket: {
-      applicationId: process.env.POCKET_RELAYER_APPID,
-      applicationSecretKey: process.env.POCKET_RELAYER_SECRET
-    },
-    // ankr: YOUR_ANKR_API_KEY
-});
+//     // etherscan: YOUR_ETHERSCAN_API_KEY,
+//     // infura: YOUR_INFURA_PROJECT_ID,
+//     // // Or if using a project secret:
+//     // // infura: {
+//     // //   projectId: YOUR_INFURA_PROJECT_ID,
+//     // //   projectSecret: YOUR_INFURA_PROJECT_SECRET,
+//     // // },
+//     alchemy: process.env.ALCHEMY_APIKEY,
+//     // pocket: {
+//     //   applicationId: process.env.POCKET_RELAYER_APPID,
+//     //   applicationSecretKey: process.env.POCKET_RELAYER_SECRET
+//     // },
+//     // ankr: YOUR_ANKR_API_KEY
+// });
+const provider = new ethers.providers.AlchemyProvider("optimism-goerli", process.env.ALCHEMY_APIKEY);
+
 const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 const hub = new ethers.Contract(hubAddress, hubABI, signer);
 
 const addLeaf = async (callParams) => {
-  console.log("callParams", callParams)
+  // console.log("callParams", callParams)
   const { issuer, v, r, s, zkp, zkpInputs } = callParams;
   const tx = await hub.addLeaf(
     issuer, 
