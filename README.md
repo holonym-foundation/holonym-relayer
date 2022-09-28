@@ -1,6 +1,6 @@
 
 # How to use relayer
-`RELAYER_URL` is _______
+`RELAYER_URL` is https://relayer.holonym.id
 
 `issuer` is the address of the credential issuer
 
@@ -12,7 +12,7 @@
 
 ```
 const axios = require("axios");
-const res = await axios.post(`$RELAYER_URL/addLeaf`, {
+const res = await axios.post(`${RELAYER_URL}/addLeaf`, {
             addLeafArgs: {
                 issuer : ISSUER_ADDRESS, 
                 v : SIGV, 
