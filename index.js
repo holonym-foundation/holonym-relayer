@@ -74,10 +74,11 @@ app.get('/', (req, res) => {
 })
 
 app.post('/addLeaf', async (req, res, next) => {
-  // console.log(...args);
+  console.log('args', req.body.addLeafArgs);
   try {
     await addLeaf(req.body.addLeafArgs);
   } catch(e) {
+    console.error(e);
     res.status(400).send(e);
     return;
   }
