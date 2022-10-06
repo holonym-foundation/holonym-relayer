@@ -69,10 +69,6 @@ const addLeaf = async (callParams) => {
 }
 // provider.getBalance('0xC8834C1FcF0Df6623Fc8C8eD25064A4148D99388').then(b=>console.log(b))
 
-app.get('/', (req, res) => {
-  res.send('For this endpoint, POST your addLeaf parameters to /addLeaf and it will submit an addLeaf() transaction to Hub')
-})
-
 app.post('/addLeaf', async (req, res, next) => {
   console.log('args', req.body.addLeafArgs);
   try {
@@ -83,6 +79,15 @@ app.post('/addLeaf', async (req, res, next) => {
     return;
   }
   res.sendStatus(200);
+})
+
+app.get('/getLeaves', async (req, res) => {
+  const leaves = await hub.getLeaves();
+  res.send(leaves.map(leaf=>leaf.toString()));
+})
+
+app.get('/', (req, res) => {
+  res.send('For this endpoint, POST your addLeaf parameters to /addLeaf and it will submit an addLeaf() transaction to Hub')
 })
 
 app.listen(port, () => {
