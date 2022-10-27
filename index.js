@@ -5,7 +5,7 @@ const app = express()
 const cors = require('cors')
 
 const corsOpts = {
-  origin: ["https://holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
+  origin: ["https://holonym.io", "https://holonym.id","https://*.holonym.io","https://*.holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
   optionsSuccessStatus: 200 // For legacy browser support
 }
 
@@ -68,10 +68,6 @@ const addLeaf = async (callParams) => {
 }
 // provider.getBalance('0xC8834C1FcF0Df6623Fc8C8eD25064A4148D99388').then(b=>console.log(b))
 
-app.get('/', (req, res) => {
-  res.send('For this endpoint, POST your addLeaf parameters to /addLeaf and it will submit an addLeaf() transaction to Hub')
-})
-
 app.post('/addLeaf', async (req, res, next) => {
   // console.log(...args);
   try {
@@ -81,6 +77,15 @@ app.post('/addLeaf', async (req, res, next) => {
     res.status(400).send(e);
     return;
   }
+})
+
+app.get('/getLeaves', async (req, res) => {
+  const leaves = await hub.getLeaves();
+  res.send(leaves.map(leaf=>leaf.toString()));
+})
+
+app.get('/', (req, res) => {
+  res.send('For this endpoint, POST your addLeaf parameters to /addLeaf and it will submit an addLeaf() transaction to Hub')
 })
 
 app.listen(port, () => {
