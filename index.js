@@ -64,8 +64,7 @@ const addLeaf = async (callParams) => {
     Object.keys(zkp).map(k=>zkp[k]), // Convert struct to ethers format
     zkpInputs
   );
-  await tx.wait();
-  return true;
+  return await tx.wait();
 }
 // provider.getBalance('0xC8834C1FcF0Df6623Fc8C8eD25064A4148D99388').then(b=>console.log(b))
 
@@ -76,12 +75,12 @@ app.get('/', (req, res) => {
 app.post('/addLeaf', async (req, res, next) => {
   // console.log(...args);
   try {
-    await addLeaf(req.body.addLeafArgs);
+    const txReceipt = await addLeaf(req.body.addLeafArgs);
+    res.status(200).json(txReceipt);
   } catch(e) {
     res.status(400).send(e);
     return;
   }
-  res.sendStatus(200);
 })
 
 app.listen(port, () => {
