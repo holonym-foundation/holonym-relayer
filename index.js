@@ -5,7 +5,7 @@ const app = express()
 const cors = require('cors')
 
 const corsOpts = {
-  origin: ["https://holonym.io", "https://holonym.id","https://*.holonym.io","https://*.holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
+  origin: ["https://holonym.io", "https://holonym.id","https://app.holonym.io","https://app.holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
   optionsSuccessStatus: 200 // For legacy browser support
 }
 
