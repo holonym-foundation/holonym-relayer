@@ -53,6 +53,8 @@ const provider = new ethers.providers.AlchemyProvider("optimism-goerli", process
 const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
 const hub = new ethers.Contract(hubAddress, hubABI, signer);
 
+const idServerUrl = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://id-server.holonym.io";
+
 const addLeaf = async (callParams) => {
 //  console.log("callParams", callParams)
   const { issuer, v, r, s, zkp, zkpInputs } = callParams;
@@ -68,10 +70,33 @@ const addLeaf = async (callParams) => {
 }
 // provider.getBalance('0xC8834C1FcF0Df6623Fc8C8eD25064A4148D99388').then(b=>console.log(b))
 
+/**
+ * @param {object} credsToStore should contain three params each of type string 
+ */
+ async function postUserCredentials(credsToStore) {
+  const { sigDigest, encryptedCredentials, encryptedSymmetricKey } = credsToStore
+  const reqBody = {
+    apiKey: process.env.ID_SERVER_API_KEY,
+    sigDigest: sigDigest,
+    encryptedCredentials: encryptedCredentials,
+    encryptedSymmetricKey: encryptedSymmetricKey
+  }
+  const resp = await fetch(`${idServerUrl}/credentials`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(reqBody)
+  })
+  return await resp.json()
+}
+
 app.post('/addLeaf', async (req, res, next) => {
   // console.log(...args);
   try {
     const txReceipt = await addLeaf(req.body.addLeafArgs);
+    // if addLeaf doesn't throw, we assume tx was successful
+    await postUserCredentials(req.body.credsToStore)
     res.status(200).json(txReceipt);
   } catch(e) {
     res.status(400).send(e);
