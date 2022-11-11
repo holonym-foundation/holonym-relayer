@@ -3,6 +3,7 @@ const { ethers } = require('ethers')
 const express = require('express')
 const app = express()
 const cors = require('cors')
+const axios = require('axios')
 
 const corsOpts = {
   origin: ["https://holonym.io", "https://holonym.id","https://*.holonym.io","https://*.holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
@@ -75,20 +76,13 @@ const addLeaf = async (callParams) => {
  */
  async function postUserCredentials(credsToStore) {
   const { sigDigest, encryptedCredentials, encryptedSymmetricKey } = credsToStore
-  const reqBody = {
+  const resp = await axios.post(`${idServerUrl}/credentials`, {
     apiKey: process.env.ID_SERVER_API_KEY,
     sigDigest: sigDigest,
     encryptedCredentials: encryptedCredentials,
     encryptedSymmetricKey: encryptedSymmetricKey
-  }
-  const resp = await fetch(`${idServerUrl}/credentials`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(reqBody)
   })
-  return await resp.json()
+  return resp.data
 }
 
 app.post('/addLeaf', async (req, res, next) => {
