@@ -6,7 +6,7 @@ const cors = require('cors')
 const axios = require('axios')
 
 const corsOpts = {
-  origin: ["https://holonym.io", "https://holonym.id","https://*.holonym.io","https://*.holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
+  origin: ["https://holonym.io", "https://holonym.id","https://app.holonym.io","https://app.holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
   optionsSuccessStatus: 200 // For legacy browser support
 }
 
@@ -86,13 +86,14 @@ const addLeaf = async (callParams) => {
 }
 
 app.post('/addLeaf', async (req, res, next) => {
-  // console.log(...args);
+  console.log('args', req.body.addLeafArgs);
   try {
     const txReceipt = await addLeaf(req.body.addLeafArgs);
     // if addLeaf doesn't throw, we assume tx was successful
     await postUserCredentials(req.body.credsToStore)
     res.status(200).json(txReceipt);
   } catch(e) {
+    console.error(e);
     res.status(400).send(e);
     return;
   }
