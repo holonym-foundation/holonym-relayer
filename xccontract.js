@@ -48,4 +48,4 @@ class XChainContract {
 
 }
 
-export default XChainContract;
+module.exports = XChainContract;
