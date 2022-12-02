@@ -1,0 +1,15 @@
+
+foundRemote="$(git remote -v | grep testContracts)"
+echo $foundRemote
+if [ -n "$foundRemote" ]
+then
+echo found
+else 
+echo testContracts remote not found, adding it
+git remote add -f testContracts https://github.com/holonym-foundation/id-hub-contracts
+fi
+
+
+git remote update
+git diff --exit-code remotes/testContracts/main -- contracts    #--output=contractDiff.txt
+exit $? #$? #will exit with exit code of previous command
