@@ -22,6 +22,7 @@ class XChainState {
                     this.xcleaves[networkName].map(leaf=>leaf.toString())
                 )
             ));
+            console.log(this.xctrees)
         });
     }
     // async forceRefreshAll() {
@@ -35,11 +36,18 @@ class XChainState {
         const newLeaves = await this.xchub.contracts[networkName].getLeavesFrom(numLeaves);
         // NOTE: re-entrancy if pushing into leaves fails, but I don't see a problem
         for (const leaf of newLeaves) {
-            this.xctrees[networkName].insert(leaf);
-            this.xcleaves[networkName].push(leaf);
+            const leafStr = leaf.toString();
+            this.xctrees[networkName].insert(leafStr);
+            this.xcleaves[networkName].push(leafStr);
         }
+    }
+    async getCurrentTree(networkName) {
+        this.refreshNetwork(networkName);
+        return this.xctrees[networkName].toJSON();
     }
     
 }
 
-new XChainState();
+
+const xcs = new XChainState();
+setTimeout(()=>console.log(xcs.getCurrentTree("optimism-goerli")), 3000)
