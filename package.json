@@ -20,6 +20,8 @@
     "holo-merkle-utils": "^0.0.1"
   },
   "devDependencies": {
+    "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "circomlibjs": "^0.1.7",
     "hardhat": "^2.12.3"
   }
 }
