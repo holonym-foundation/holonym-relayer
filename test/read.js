@@ -3,7 +3,6 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 const { deployPoseidon } = require("../utils/utils");
 
-console.log(ethers)
 describe("Smart contract reading", function () {
     before(async function() {
         [this.account, this.admin, this.someAccount] = await ethers.getSigners();
@@ -28,7 +27,7 @@ describe("Smart contract reading", function () {
     
     describe("getLeaves", function() {
         it("works for empty leaves", async function() {
-            console.log(await this.hub.getLeaves());
+            expect(await this.hub.getLeaves()).to.deep.equal([]);
         });
     });
 });
