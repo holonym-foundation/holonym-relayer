@@ -4,6 +4,8 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 const axios = require('axios')
+const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
+const { poseidon } = require('circomlibjs-old');
 const XChainContract = require('./xccontract')
 
 const corsOpts = {
@@ -39,6 +41,11 @@ const xchub = new XChainContract("Hub");
 const goerliHub = xchub.contracts["optimism-goerli"]; // Keep the same testnet Hub for backwards compatability (at least for now)
 
 const idServerUrl = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://id-server.holonym.io";
+
+let treeHasBeenInitialized = false;
+const tree = new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
+let leaves = [];
+
 
 const addLeaf = async (callParams) => {
 //  console.log("callParams", callParams)
@@ -89,8 +96,55 @@ app.get('/getLeaves', async (req, res) => {
   res.send(leaves.map(leaf=>leaf.toString()));
 })
 
+app.get('/getTree', async (req, res) => {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const timeout = new Date().getTime() + 60 * 1000;
+  while (new Date().getTime() <= timeout && !treeHasBeenInitialized) {
+    await sleep(50);
+  }
+  if (!treeHasBeenInitialized) {
+    return res.status(500).json({ error: 'Merkle tree has not been initialized' });
+  }
+
+  // Update tree
+  const leavesInContract = (await goerliHub.getLeaves()).map(leaf => leaf.toString());
+  const newLeaves = leavesInContract.filter(leaf => !leaves.includes(leaf));
+  for (const leaf of newLeaves) {
+    tree.insert(leaf);
+  }
+
+  return res.status(200).json(tree);
+})
+
 app.get('/', (req, res) => {
   res.send('For this endpoint, POST your addLeaf parameters to /addLeaf and it will submit an addLeaf() transaction to Hub')
 })
+
+
+function poseidonHashQuinary(input) {
+  if (input.length !== 5 || !Array.isArray(input)) {
+    throw new Error("input must be an array of length 5");
+  }
+  return poseidon(input.map((x) => ethers.BigNumber.from(x).toString())).toString();
+}
+
+async function initializeTree() {
+  console.log('Initializing in-memory merkle tree')
+  console.time('tree-initialization')
+  leaves = (await goerliHub.getLeaves()).map(leaf => leaf.toString());
+  for (const leaf of leaves) {
+    tree.insert(leaf);
+  }
+  treeHasBeenInitialized = true;
+  console.log('Merkle tree in memory has been initialized')
+  console.timeEnd('tree-initialization')
+}
+
+// TODO: initialize tree using S3 backup (or local file)
+// pseudocode: 
+// let treeBackup = fs.readFile(backup); 
+// for property in treeBackup: tree[property] = treeBackup[property]
+
+initializeTree()
 
 app.listen(port, () => {})
