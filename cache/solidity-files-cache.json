@@ -628,45 +628,6 @@
         "Math"
       ]
     },
-    "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/ResidencyStore.sol": {
-      "lastModificationDate": 1669955587364,
-      "contentHash": "1373b1a8a9d3b50464253e54aa75de50",
-      "sourceName": "contracts/ResidencyStore.sol",
-      "solcConfig": {
-        "version": "0.8.17",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "hardhat/console.sol",
-        "./Hub.sol",
-        "./PairingAndProof.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.9"
-      ],
-      "artifacts": [
-        "ResidencyStore"
-      ]
-    },
     "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/AssertLeafContainsCredsVerifier.sol": {
       "lastModificationDate": 1669955587362,
       "contentHash": "9f372c8e68c90cfe684a41bd27ec9068",
@@ -703,45 +664,6 @@
       ],
       "artifacts": [
         "AssertLeafContainsCredsVerifier"
-      ]
-    },
-    "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/AntiSybilStore.sol": {
-      "lastModificationDate": 1669955587360,
-      "contentHash": "7cf0e554639afb486c5b64758340e903",
-      "sourceName": "contracts/AntiSybilStore.sol",
-      "solcConfig": {
-        "version": "0.8.17",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "hardhat/console.sol",
-        "./Hub.sol",
-        "./PairingAndProof.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.9"
-      ],
-      "artifacts": [
-        "AntiSybilStore"
       ]
     },
     "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/antiSybil.verifier.sol": {
@@ -997,6 +919,82 @@
       ],
       "artifacts": [
         "IResidencyStore"
+      ]
+    },
+    "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/SybilResistance.sol": {
+      "lastModificationDate": 1670197895287,
+      "contentHash": "8b43c355591134721d09a2a45f28fb07",
+      "sourceName": "contracts/SybilResistance.sol",
+      "solcConfig": {
+        "version": "0.8.17",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./Hub.sol",
+        "./PairingAndProof.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.9"
+      ],
+      "artifacts": [
+        "SybilResistance"
+      ]
+    },
+    "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/IsUSResident.sol": {
+      "lastModificationDate": 1670197895288,
+      "contentHash": "bd8cbf1cd70f80fae9a4625aa12676ad",
+      "sourceName": "contracts/IsUSResident.sol",
+      "solcConfig": {
+        "version": "0.8.17",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./Hub.sol",
+        "./PairingAndProof.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.9"
+      ],
+      "artifacts": [
+        "IsUSResident"
       ]
     }
   }
