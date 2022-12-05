@@ -12,6 +12,7 @@ async function initAddresses (){
     if(!addressesLoading) {
         addressesLoading = true;
         addresses = (process.env.HARDHAT_TESTING === "true") ? await deployTestingContracts() : require("./constants/contract-addresses.json");
+        addressesLoading = false;
     }
     // This loop is run when initAddresses is called twice so it doesn't try loading addresses twice
     while(addressesLoading) {
