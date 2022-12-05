@@ -10,7 +10,7 @@ chai.use(chaiHTTP);
 
 const NETWORK_NAME = "hardhat"; //when testing, the network name is just hardhat not, e.g., arbitrum
 
-describe("Smart contract reading", function () {
+describe.only("Smart contract reading", function () {
     before(async function () {
         this.server = await app_;
         this.request = chai.request(this.server);
@@ -23,7 +23,7 @@ describe("Smart contract reading", function () {
             expect(await this.hhHub.getLeaves()).to.deep.equal([]);
             expect(await this.hhHub.getLeavesFrom(0)).to.deep.equal([]);
             this.request.get("/getLeaves/hardhat").end((err,response)=>{
-               expect(response.body.to.deep.equal([]));
+               expect(response.body).to.deep.equal([]);
             })
         });
         it("getLeavesFrom works for multiple leaves", async function() {
