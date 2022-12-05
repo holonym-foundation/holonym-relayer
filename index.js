@@ -172,11 +172,6 @@ async function initializeTree() {
   await backupTree(tree);
 }
 
-// TODO: initialize tree using S3 backup (or local file)
-// pseudocode: 
-// let treeBackup = fs.readFile(backup); 
-// for property in treeBackup: tree[property] = treeBackup[property]
-
 initializeTree()
 
 app.listen(port, () => {})
