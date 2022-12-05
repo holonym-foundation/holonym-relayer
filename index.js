@@ -1,4 +1,5 @@
 require('dotenv').config()
+const fsPromises = require('node:fs/promises');
 const { ethers } = require('ethers')
 const express = require('express')
 const app = express()
@@ -7,6 +8,7 @@ const axios = require('axios')
 const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
 const { poseidon } = require('circomlibjs-old');
 const XChainContract = require('./xccontract')
+const { backupTreeFileName } = require('./constants/misc');
 
 const corsOpts = {
   origin: ["https://holonym.io", "https://holonym.id","https://app.holonym.io","https://app.holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
@@ -16,7 +18,7 @@ const corsOpts = {
 app.use(cors(corsOpts));
 app.use(express.json());
 
-const port = 3000;
+const port = 3001;
 // const { contracts } = require('./constants')
 
 
@@ -44,8 +46,7 @@ const idServerUrl = process.env.NODE_ENV === "development" ? "http://localhost:3
 
 let treeHasBeenInitialized = false;
 const tree = new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
-let leaves = [];
-
+let leafCountAtLastBackup = 0;
 
 const addLeaf = async (callParams) => {
 //  console.log("callParams", callParams)
@@ -61,6 +62,16 @@ const addLeaf = async (callParams) => {
   return result;
 }
 // provider.getBalance('0xC8834C1FcF0Df6623Fc8C8eD25064A4148D99388').then(b=>console.log(b))
+
+async function backupTree(tree) {
+  try {
+    console.log('backing up merkle tree')
+    await fsPromises.writeFile(backupTreeFileName, JSON.stringify(tree));
+    leafCountAtLastBackup = tree.leaves.length;
+  } catch (err) {
+    console.log(err)
+  }
+}
 
 /**
  * @param {object} credsToStore should contain three params each of type string 
@@ -108,9 +119,13 @@ app.get('/getTree', async (req, res) => {
 
   // Update tree
   const leavesInContract = (await goerliHub.getLeaves()).map(leaf => leaf.toString());
-  const newLeaves = leavesInContract.filter(leaf => !leaves.includes(leaf));
+  const newLeaves = leavesInContract.filter(leaf => !tree.leaves.includes(leaf));
   for (const leaf of newLeaves) {
     tree.insert(leaf);
+  }
+
+  if (tree.leaves.length - leafCountAtLastBackup >= 1) {
+    await backupTree(tree);
   }
 
   return res.status(200).json(tree);
@@ -131,13 +146,30 @@ function poseidonHashQuinary(input) {
 async function initializeTree() {
   console.log('Initializing in-memory merkle tree')
   console.time('tree-initialization')
-  leaves = (await goerliHub.getLeaves()).map(leaf => leaf.toString());
+  // Initialize tree from backup. This step ensures that we can respond to getTree 
+  // requests immediately after this Node.js process restarts. It might take hours to 
+  // reconstruct the tree from leaves in the smart contract.
+  try {
+    const backupTreeStr = await fsPromises.readFile(backupTreeFileName, 'utf8');
+    const backupTree = JSON.parse(backupTreeStr);
+    tree._nodes = backupTree._nodes;
+    tree._root = backupTree._root;
+    tree._zeroes = backupTree._zeroes;
+    leafCountAtLastBackup = tree.leaves.length;
+  } catch (err) {
+    console.log(err);
+  }
+
+  // Initialize tree from contract
+  const leaves = (await goerliHub.getLeaves()).map(leaf => leaf.toString());
   for (const leaf of leaves) {
     tree.insert(leaf);
   }
   treeHasBeenInitialized = true;
   console.log('Merkle tree in memory has been initialized')
   console.timeEnd('tree-initialization')
+
+  await backupTree(tree);
 }
 
 // TODO: initialize tree using S3 backup (or local file)
