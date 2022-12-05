@@ -22,8 +22,12 @@ describe.only("Writing", function () {
 
 
     it("Integration test: add some leaves and prove facts about them (integration test as two unit tests would take a while to run)", async function() {
-        console.log("t l ", testLeaves[0])
-        chai.request(this.server).post("/addLeaf").type('json').send({foo: 'bar'}).end(function(err, res) {})
+        const fakeCredsToStore = {
+            "sigDigest": "abc",
+            "encryptedCredentials": "def",
+            "encryptedSymmetricKey": "ghi"
+        }
+        chai.request(this.server).post("/addLeaf").type('json').send({addLeafArgs: testLeaves[0], credsToStore: fakeCredsToStore}).end(function(err, res) {})
         // .type("form").send(testLeaves[0]);
         // .set("content-type", "application/json")
         

@@ -47,6 +47,7 @@ const init = async () => {
 };
 
 const idServerUrl = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://id-server.holonym.io";
+console.log("idServerUrl", idServerUrl);
 
 const addLeaf = async (callParams) => {
 //  console.log("callParams", callParams)

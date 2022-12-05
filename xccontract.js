@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { ethers } = require("ethers")
+require("@nomiclabs/hardhat-ethers");
 const { deployTestingContracts } = require("./scripts/deploy-testing-contracts.js");
 const abis = require("./constants/abis");
 let addresses;
@@ -44,7 +44,6 @@ class XChainContract {
         // Populate providers & signers
         for ( const networkName of Object.keys(this.addresses) ) {
             const address = this.addresses[networkName];
-            if(process.env.HARDHAT_TESTING === "true") console.log("adding provider", ethers.provider)
             const provider = (process.env.HARDHAT_TESTING === "true") ? ethers.provider : new ethers.providers.AlchemyProvider(networkName, process.env.ALCHEMY_APIKEY);
             const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
             const contract = new ethers.Contract(address, this.abi, signer);
@@ -59,7 +58,6 @@ class XChainContract {
                 const responses = {};
                 for ( const networkName of Object.keys(this.contracts) ) {
                     const contract = this.contracts[networkName];
-                    console.log(this.contracts[networkName], "ahijllkjhlkjjh")
                     const result = await contract[functionName](...args);
                     responses[networkName] = result;
                 }
