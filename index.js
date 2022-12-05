@@ -35,11 +35,14 @@ const port = process.env.PORT || 3000;
 //     // ankr: YOUR_ANKR_API_KEY
 // });
 
-let xchub;
+let xcontracts = {}
 let goerliHub; // Keep the same testnet Hub for backwards compatability (at least for now)
 const init = async () => {
-  xchub = await CreateXChainContract("Hub");
-  goerliHub = xchub.contracts["optimism-goerli"];
+  for (const contractName of Object.keys(contractAddresses)) {
+    xcontracts[contractName] = await CreateXChainContract("Hub");
+  }
+  // xcontracts["Hub"] = await CreateXChainContract("Hub");
+  goerliHub = xcontracts["Hub"].contracts["optimism-goerli"];
 
 };
 
@@ -48,7 +51,7 @@ const idServerUrl = process.env.NODE_ENV === "development" ? "http://localhost:3
 const addLeaf = async (callParams) => {
 //  console.log("callParams", callParams)
   const { issuer, v, r, s, zkp, zkpInputs } = callParams;
-  const result = await xchub.addLeaf(
+  const result = await xcontracts["Hub"].addLeaf(
     issuer, 
     v, 
     r, 
@@ -58,7 +61,17 @@ const addLeaf = async (callParams) => {
   );
   return result;
 }
-// provider.getBalance('0xC8834C1FcF0Df6623Fc8C8eD25064A4148D99388').then(b=>console.log(b))
+
+const writeProof = async (proofContractName, callParams) => {
+  
+  const { zkp, zkpInputs } = callParams;
+  const result = await xcontracts[proofContractName].addLeaf(
+    Object.keys(zkp).map(k=>zkp[k]), // Convert struct to ethers format
+    zkpInputs
+  );
+  return result;
+}
+
 
 /**
  * @param {object} credsToStore should contain three params each of type string 
@@ -75,7 +88,7 @@ const addLeaf = async (callParams) => {
 }
 
 app.post('/addLeaf', async (req, res, next) => {
-  console.log('args', req.body.addLeafArgs);
+  console.log('addLeaf called with args ', req.body.addLeafArgs);
   try {
     const txReceipt = await addLeaf(req.body.addLeafArgs);
     // if addLeaf doesn't throw, we assume tx was successful
@@ -88,6 +101,18 @@ app.post('/addLeaf', async (req, res, next) => {
   }
 })
 
+app.get('/writeProof/:proofContractName', async (req, res) => {
+  console.log('writeProof called with args ', req.body.writeProofArgs);
+  try {
+    const txReceipt = await writeProof(req.body.addLeafArgs);
+
+    res.status(200).json(txReceipt);
+  } catch(e) {
+    console.error(e);
+    res.status(400).send(e);
+    return;
+  }
+})
 
 app.get('/getLeaves', async (req, res) => {
   const leaves = await goerliHub.getLeaves();
@@ -95,7 +120,7 @@ app.get('/getLeaves', async (req, res) => {
 })
 
 app.get('/getLeaves/:network', async (req, res) => {
-  const leaves = await xchub.contracts[req.params.network].getLeaves();
+  const leaves = await xcontracts["Hub"].contracts[req.params.network].getLeaves();
   res.send(leaves.map(leaf=>leaf.toString()));
 })
 
