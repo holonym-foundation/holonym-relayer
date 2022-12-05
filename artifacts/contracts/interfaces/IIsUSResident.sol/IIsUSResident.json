@@ -1,7 +1,7 @@
 {
   "_format": "hh-sol-artifact-1",
-  "contractName": "IResidencyStore",
-  "sourceName": "contracts/interfaces/IResidencyStore.sol",
+  "contractName": "IIsUSResident",
+  "sourceName": "contracts/interfaces/IIsUSResident.sol",
   "abi": [
     {
       "inputs": [

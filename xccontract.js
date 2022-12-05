@@ -26,8 +26,7 @@ class XChainContract {
         this.abi = abis[contractName];
         this.interface = new ethers.utils.Interface(this.abi);
         this.functionNames = Object.keys(this.interface.functions).map(f=>this.interface.functions[f].name);
-        console.log(addresses, nets, addresses[nets])
-        this.addresses = addresses[nets][contractName];
+        this.addresses = addresses[contractName][nets];
         this.providers = {};
         this.signers = {};
         this.contracts = {};
@@ -47,7 +46,6 @@ class XChainContract {
         for ( const functionName of this.functionNames ) {
             this[functionName] = async (...args) => {
                 const responses = {};
-
                 for ( const networkName of Object.keys(this.contracts) ) {
                     const contract = this.contracts[networkName];
                     const result = await contract[functionName](...args);

@@ -31,7 +31,7 @@ const attachPoseidon = async (address) => {
  *   RESSTORE_ADDRESS : "0x123",
  * })
  */
-async function initContracts(addresses) {
+async function deployTestingContracts(addresses) {
     const {
         POSEIDONT6_ADDRESS,
         INCREMENTALQUINTREE_ADDRESS,
@@ -39,14 +39,11 @@ async function initContracts(addresses) {
         COUNTRYVERIFIER_ADDRESS,
         RESSTORE_ADDRESS,
         ANTISYBILVERIFIER_ADDRESS,
-        ANTISYBIL_ADDRESS
+        ANTISYBIL_ADDRESS,
+        ANTISYBIL2_ADDRESS,
+
     } = 
     {
-        POSEIDONT6_ADDRESS : "",
-        INCREMENTALQUINTREE_ADDRESS : "",
-        HUB_ADDRESS : "",
-        COUNTRYVERIFIER_ADDRESS : "",
-        RESSTORE_ADDRESS : "",
         ...addresses
     }
     
@@ -104,8 +101,7 @@ async function initContracts(addresses) {
     const sr = ANTISYBIL_ADDRESS ? await srFactory.attach(ANTISYBIL_ADDRESS) : await (srFactory).deploy(hub.address, "0x8281316ac1d51c94f2de77575301cef615adea84");
     await sr.deployed();
 
-    const srFactory2 = await ethers.getContractFactory("SybilResistance"); 
-    const sr2 = ANTISYBIL2_ADDRESS ? await srFactory2.attach(ANTISYBIL2_ADDRESS) : await (sr2Factory).deploy(hub.address, "0x8281316ac1d51c94f2de77575301cef615adea84"); //Change this address!
+    const sr2 = ANTISYBIL2_ADDRESS ? await srFactory.attach(ANTISYBIL2_ADDRESS) : await (srFactory).deploy(hub.address, "0x8281316ac1d51c94f2de77575301cef615adea84"); //Change this address!
     await sr2.deployed();
   
     const result = {
@@ -115,10 +111,10 @@ async function initContracts(addresses) {
       "SybilResistance2" : {"mainnet" : {"hardhat" : sr2.address}, "testnet" : {"hardhat" : sr2.address}}, 
     }
 
-    return result.map
+    return result
     
 }
 
 exports.attachPoseidon = attachPoseidon;
 exports.deployPoseidon = deployPoseidon;
-exports.deployTestingContracts = initContracts;
+exports.deployTestingContracts = deployTestingContracts;
