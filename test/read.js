@@ -29,7 +29,14 @@ describe("Smart contract reading", function () {
                     leafParams.zkpInputs
                 )
             }
-            console.log(await this.xcHub.getLeaves())
+            const leaves = (await this.xcHub.getLeaves())["hardhat"]
+            console.log(leaves, (await this.xcHub.getLeavesFrom(0))["hardhat"])
+            expect((await this.xcHub.getLeavesFrom(0))["hardhat"]).to.deep.equal(leaves)
+            expect((await this.xcHub.getLeavesFrom(1))["hardhat"]).to.deep.equal(leaves.slice(1))
+            expect((await this.xcHub.getLeavesFrom(2))["hardhat"]).to.deep.equal(leaves.slice(2))
+            expect((await this.xcHub.getLeavesFrom(3))["hardhat"]).to.deep.equal([])
+            expect((await this.xcHub.getLeavesFrom(4))["hardhat"]).to.deep.equal([])
         })
+        
     });
 });
