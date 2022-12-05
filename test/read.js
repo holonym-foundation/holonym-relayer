@@ -48,7 +48,32 @@ describe("Smart contract reading", function () {
             expect((await this.xcHub.getLeavesFrom(2))["hardhat"]).to.deep.equal(leaves.slice(2))
             expect((await this.xcHub.getLeavesFrom(3))["hardhat"]).to.deep.equal([])
             expect((await this.xcHub.getLeavesFrom(4))["hardhat"]).to.deep.equal([])
-        })
+        });
+
+        // TODO: this test
+        it("Merkle tree updates work", async function() {
+            expect("TODO").to.equal("Not Implemented yet");
+            // Implementation here, code mixed with pseudocode for some unfinished lines:
+            // const leaves = (await this.xcHub.getLeaves())["hardhat"]
+            // let testTree = new MerkleTree(leaves) // instantiation here is just pseudocode
+            // this.request.get("/getTree/hardhat").end((err,response)=>{
+            //     expect(response.body).to.deep.equal(testTree.toJSON());
+            //  })
+            // let newLeaf = testTrees[3]
+            // testTree.add(newLeaf.zkpInputs[1]) // zkpInputs[1] is the new leaf
+            // await this.xcHub.addLeaf(
+            //     leafParams.issuer, 
+            //     leafParams.v, 
+            //     leafParams.r, 
+            //     leafParams.s, 
+            //     Object.keys(leafParams.zkp).map(k=>leafParams.zkp[k]), // Convert struct to ethers format
+            //     leafParams.zkpInputs
+            // )
+            // this.request.get("/getTree/hardhat").end((err,response)=>{
+            //     expect(response.body).to.deep.equal(testTree.toJSON());
+            //  })
+            
+        });
         
     });
 });
