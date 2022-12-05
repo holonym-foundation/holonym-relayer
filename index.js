@@ -43,7 +43,6 @@ const port = process.env.PORT || 3000;
 let xcontracts = {}
 let goerliHub; // Keep the same testnet Hub for backwards compatability (at least for now)
 const init = async () => {
-  console.log("contractAddresses", contractAddresses)
   for (const contractName of Object.keys(contractAddresses)) {
     xcontracts[contractName] = await CreateXChainContract("Hub");
   }
@@ -52,7 +51,7 @@ const init = async () => {
 
 };
 
-const idServerUrl = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://id-server.holonym.io";
+const idServerUrl = process.env.NODE_ENV === "development" ? "http://127.0.0.1:3000" : "https://id-server.holonym.io";
 console.log("idServerUrl", idServerUrl);
 
 let treeHasBeenInitialized = false;
@@ -61,7 +60,6 @@ let leafCountAtLastBackup = 0;
 
 const addLeaf = async (callParams) => {
 //  console.log("callParams", callParams)
-console.log("call params r", callParams)
   const { issuer, v, r, s, zkp, zkpInputs } = callParams;
   const result = await xcontracts["Hub"].addLeaf(
     issuer, 
@@ -71,7 +69,6 @@ console.log("call params r", callParams)
     Object.keys(zkp).map(k=>zkp[k]), // Convert struct to ethers format
     zkpInputs
   );
-  console.log("addLeaf result is", result)
   return result;
 }
 
@@ -111,7 +108,7 @@ async function backupTree(tree) {
 }
 
 app.post('/addLeaf', async (req, res, next) => {
-  console.log('addLeaf called with args ', req.body.addLeafArgs);
+  console.log('addLeaf called with args ', JSON.stringify(req.body.addLeafArgs));
   try {
     const txReceipt = await addLeaf(req.body.addLeafArgs);
     // if addLeaf doesn't throw, we assume tx was successful

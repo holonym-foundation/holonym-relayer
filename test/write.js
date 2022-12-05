@@ -6,6 +6,7 @@ const testLeaves = require("./test-leaves.json");
 require("@nomiclabs/hardhat-ethers");
 const app_ = require("../index.js").appPromise;
 const chaiHTTP = require("chai-http");
+const { randomBytes } = require("ethers/lib/utils");
 chai.use(chaiHTTP);
 
 const NETWORK_NAME = "hardhat"; //when testing, the network name is just hardhat not, e.g., arbitrum
@@ -23,21 +24,13 @@ describe.only("Writing", function () {
 
     it("Integration test: add some leaves and prove facts about them (integration test as two unit tests would take a while to run)", async function() {
         const fakeCredsToStore = {
-            "sigDigest": "abc",
-            "encryptedCredentials": "def",
-            "encryptedSymmetricKey": "ghi"
+            sigDigest: randomBytes(16).toString("hex"),
+            encryptedCredentials: randomBytes(16).toString("hex"),
+            encryptedSymmetricKey: randomBytes(16).toString("hex"),
         }
-        chai.request(this.server).post("/addLeaf").type('json').send({addLeafArgs: testLeaves[0], credsToStore: fakeCredsToStore}).end(function(err, res) {})
-        // .type("form").send(testLeaves[0]);
-        // .set("content-type", "application/json")
-        
-        //.end((err,response)=>{
-            // this.request.get("/getLeaves/hardhat").end((err2, response2)=>{
-            //     expect(response2.body).to.deep.equal([testLeaves[0].zkpInputs[1]]);
-            // });
-        // console.log(result)
-        const result2 = chai.request(this.server).get("/getLeaves/hardhat");
-        // console.log(result2, "result2")
+        await chai.request(this.server).post("/addLeaf").send({addLeafArgs: testLeaves[0], credsToStore: fakeCredsToStore})
+        const response = await chai.request(this.server).get("/getLeaves/hardhat");
+        expect(response.body).to.deep.equal([BigInt(testLeaves[0].zkpInputs[1]).toString()]) // zkpInputs[1] is the new leaf that should be added to the Merkle tree
             
 
     });
