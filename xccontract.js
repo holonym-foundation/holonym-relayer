@@ -1,19 +1,17 @@
 require("dotenv").config();
+const { ethers } = require("ethers")
 const { deployTestingContracts } = require("./scripts/deploy-testing-contracts.js");
 const abis = require("./constants/abis");
 let addresses;
-if(process.env.HARDHAT_TESTING) { 
-    // deployTestingContracts().then(a=>address=a) 
-} else {
-    addresses = require("./constants/contract-addresses.json")
-};
 
 const nets = process.env.NETWORKS // "mainnet" or "testnet"
-
+console.log(process.env)
 // Safely create a cross-chain contract wrapper, after addresses have loaded
 async function CreateXChainContract(...args) {
-    if(!addresses){
+    if(process.env.HARDHAT_TESTING === "true"){
         addresses = await deployTestingContracts();
+    } else {
+        addresses = require("./constants/contract-addresses.json");
     }
     return new XChainContract(...args)
 }
@@ -33,8 +31,9 @@ class XChainContract {
 
         // Populate providers & signers
         for ( const networkName of Object.keys(this.addresses) ) {
+            console.log("networkName", networkName)
             const address = this.addresses[networkName];
-            const provider = process.env.HARDHAT_TESTING ? ethers.provider : new ethers.providers.AlchemyProvider(networkName, process.env.ALCHEMY_APIKEY);
+            const provider = (process.env.HARDHAT_TESTING === "true") ? ethers.provider : new ethers.providers.AlchemyProvider(networkName, process.env.ALCHEMY_APIKEY);
             const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
             const contract = new ethers.Contract(address, this.abi, signer);
             this.providers[networkName] = provider;

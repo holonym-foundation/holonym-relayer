@@ -20,15 +20,24 @@ describe.only("Writing", function () {
         
     })
 
-    describe("Empty Set", function() {
-        it("works for empty set of leaves", async function() {
-            expect(await this.hhHub.getLeaves()).to.deep.equal([]);
-            expect(await this.hhHub.getLeavesFrom(0)).to.deep.equal([]);
-            this.request.get("/getLeaves/hardhat").end((err,response)=>{
-               expect(response.body).to.deep.equal([]);
-            })
-        });
+
+    it("Integration test: add some leaves and prove facts about them (integration test as two unit tests would take a while to run)", async function() {
+        console.log("t l ", testLeaves[0])
+        chai.request(this.server).post("/addLeaf").type('json').send({foo: 'bar'}).end(function(err, res) {})
+        // .type("form").send(testLeaves[0]);
+        // .set("content-type", "application/json")
+        
+        //.end((err,response)=>{
+            // this.request.get("/getLeaves/hardhat").end((err2, response2)=>{
+            //     expect(response2.body).to.deep.equal([testLeaves[0].zkpInputs[1]]);
+            // });
+        // console.log(result)
+        const result2 = chai.request(this.server).get("/getLeaves/hardhat");
+        // console.log(result2, "result2")
+            
+
     });
+
     describe("Non-empty sets", function() {
         // before(async function() {
         //     // Add 3 leaves:

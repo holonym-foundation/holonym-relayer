@@ -2,7 +2,6 @@
     "Hub" : {
         "mainnet" : {},
         "testnet" : {
-            "optimism-goerli-old" : "0x6A78dF871291627C5470F7a768745C3ff05741F2",
             "optimism-goerli" : "0x9282bB470D26129001ab8F81e514D6FEFc1a3d4B"
         }
     }

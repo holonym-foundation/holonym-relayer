@@ -1,11 +1,10 @@
 require('dotenv').config()
-const { ethers } = require('ethers')
 const express = require('express')
 const app = express()
 const cors = require('cors')
 const axios = require('axios')
 const CreateXChainContract = require('./xccontract')
-
+const contractAddresses = require('./constants/contract-addresses.json')
 const corsOpts = {
   origin: ["https://holonym.io", "https://holonym.id","https://app.holonym.io","https://app.holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
   optionsSuccessStatus: 200 // For legacy browser support
@@ -38,6 +37,7 @@ const port = process.env.PORT || 3000;
 let xcontracts = {}
 let goerliHub; // Keep the same testnet Hub for backwards compatability (at least for now)
 const init = async () => {
+  console.log("contractAddresses", contractAddresses)
   for (const contractName of Object.keys(contractAddresses)) {
     xcontracts[contractName] = await CreateXChainContract("Hub");
   }
@@ -50,6 +50,7 @@ const idServerUrl = process.env.NODE_ENV === "development" ? "http://localhost:3
 
 const addLeaf = async (callParams) => {
 //  console.log("callParams", callParams)
+console.log("call params r", callParams)
   const { issuer, v, r, s, zkp, zkpInputs } = callParams;
   const result = await xcontracts["Hub"].addLeaf(
     issuer, 
@@ -59,6 +60,7 @@ const addLeaf = async (callParams) => {
     Object.keys(zkp).map(k=>zkp[k]), // Convert struct to ethers format
     zkpInputs
   );
+  console.log("addLeaf result is", result)
   return result;
 }
 
