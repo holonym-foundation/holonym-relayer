@@ -10,7 +10,6 @@ describe("Smart contract reading", function () {
     before(async function () {
         this.xcHub = await CreateCrossChainContract("Hub");
         this.hhHub = this.xcHub.contracts["hardhat"];
-        console.log("hubbbb", this.hhHub.address)
     })
 
     describe("getting leaves", function() {
@@ -30,7 +29,6 @@ describe("Smart contract reading", function () {
                 )
             }
             const leaves = (await this.xcHub.getLeaves())["hardhat"]
-            console.log(leaves, (await this.xcHub.getLeavesFrom(0))["hardhat"])
             expect((await this.xcHub.getLeavesFrom(0))["hardhat"]).to.deep.equal(leaves)
             expect((await this.xcHub.getLeavesFrom(1))["hardhat"]).to.deep.equal(leaves.slice(1))
             expect((await this.xcHub.getLeavesFrom(2))["hardhat"]).to.deep.equal(leaves.slice(2))
