@@ -1,13 +1,19 @@
 
-const { expect } = require("chai");
+const chai = require("chai");
+const { expect } = chai;
 const CreateCrossChainContract = require("../xccontract");
 const testLeaves = require("./test-leaves.json");
 require("@nomiclabs/hardhat-ethers");
+const app_ = require("../index.js").appPromise;
+const chaiHTTP = require("chai-http");
+chai.use(chaiHTTP);
 
 const NETWORK_NAME = "hardhat"; //when testing, the network name is just hardhat not, e.g., arbitrum
 
 describe("Smart contract reading", function () {
     before(async function () {
+        this.server = await app_;
+        this.request = chai.request(this.server);
         this.xcHub = await CreateCrossChainContract("Hub");
         this.hhHub = this.xcHub.contracts["hardhat"];
     })
@@ -16,8 +22,11 @@ describe("Smart contract reading", function () {
         it("works for empty leaves", async function() {
             expect(await this.hhHub.getLeaves()).to.deep.equal([]);
             expect(await this.hhHub.getLeavesFrom(0)).to.deep.equal([]);
+            this.request.get("/getLeaves/hardhat").end((err,response)=>{
+               expect(response.body.to.deep.equal([]));
+            })
         });
-        it("getLeaves works for 1-5 leaves", async function() {
+        it("getLeavesFrom works for multiple leaves", async function() {
             for (const leafParams of testLeaves.slice(0,3)) {
                 await this.xcHub.addLeaf(
                     leafParams.issuer, 

@@ -4,7 +4,7 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 const axios = require('axios')
-const XChainContract = require('./xccontract')
+const CreateXChainContract = require('./xccontract')
 
 const corsOpts = {
   origin: ["https://holonym.io", "https://holonym.id","https://app.holonym.io","https://app.holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
@@ -14,7 +14,7 @@ const corsOpts = {
 app.use(cors(corsOpts));
 app.use(express.json());
 
-const port = 3000;
+const port = process.env.PORT || 3000;
 // const { contracts } = require('./constants')
 
 
@@ -35,8 +35,13 @@ const port = 3000;
 //     // ankr: YOUR_ANKR_API_KEY
 // });
 
-const xchub = new XChainContract("Hub");
-const goerliHub = xchub.contracts["optimism-goerli"]; // Keep the same testnet Hub for backwards compatability (at least for now)
+let xchub;
+let goerliHub; // Keep the same testnet Hub for backwards compatability (at least for now)
+const init = async () => {
+  xchub = await CreateXChainContract("Hub");
+  goerliHub = xchub.contracts["optimism-goerli"];
+
+};
 
 const idServerUrl = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://id-server.holonym.io";
 
@@ -89,8 +94,19 @@ app.get('/getLeaves', async (req, res) => {
   res.send(leaves.map(leaf=>leaf.toString()));
 })
 
+app.get('/getLeaves/:network', async (req, res) => {
+  const leaves = await xchub.contracts[req.params.network].getLeaves();
+  res.send(leaves.map(leaf=>leaf.toString()));
+})
+
 app.get('/', (req, res) => {
   res.send('For this endpoint, POST your addLeaf parameters to /addLeaf and it will submit an addLeaf() transaction to Hub')
 })
 
 app.listen(port, () => {})
+
+module.exports.appPromise = new Promise(
+  function(resolve, reject){
+    init().then(resolve(app))
+  }
+); // For testing app with Chai

@@ -21,6 +21,7 @@
   },
   "devDependencies": {
     "@nomiclabs/hardhat-waffle": "^2.0.3",
+    "chai-http": "^4.3.0",
     "circomlibjs": "^0.1.7",
     "hardhat": "^2.12.3"
   }
