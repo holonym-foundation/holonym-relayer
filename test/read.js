@@ -22,6 +22,9 @@ describe("Smart contract reading", function () {
         it("works for empty set of leaves", async function() {
             expect(await this.hhHub.getLeaves()).to.deep.equal([]);
             expect(await this.hhHub.getLeavesFrom(0)).to.deep.equal([]);
+            expect((await this.xcHub.getLeaves())["hardhat"]).to.deep.equal([]);
+            expect((await this.xcHub.getLeavesFrom(0))["hardhat"]).to.deep.equal([]);
+
             this.request.get("/getLeaves/hardhat").end((err,response)=>{
                expect(response.body).to.deep.equal([]);
             })
