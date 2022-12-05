@@ -5,7 +5,6 @@ const abis = require("./constants/abis");
 let addresses;
 
 const nets = process.env.NETWORKS // "mainnet" or "testnet"
-console.log(process.env)
 // Safely create a cross-chain contract wrapper, after addresses have loaded
 async function CreateXChainContract(...args) {
     if(process.env.HARDHAT_TESTING === "true"){
@@ -31,7 +30,6 @@ class XChainContract {
 
         // Populate providers & signers
         for ( const networkName of Object.keys(this.addresses) ) {
-            console.log("networkName", networkName)
             const address = this.addresses[networkName];
             const provider = (process.env.HARDHAT_TESTING === "true") ? ethers.provider : new ethers.providers.AlchemyProvider(networkName, process.env.ALCHEMY_APIKEY);
             const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
