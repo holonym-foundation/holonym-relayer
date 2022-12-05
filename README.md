@@ -25,4 +25,4 @@ const res = await axios.post(`${RELAYER_URL}/addLeaf`, {
 ```
 
 # Testing
-A local hardhat environment is used for testing. All of the smart contracts in contracts/ are used here solely for testing purposes
+A local hardhat environment is used for testing. All of the smart contracts in contracts/ are used here solely for testing purposes. Call `npx hardhat test` to test
