@@ -1,10 +1,16 @@
 require('dotenv').config()
+const fsPromises = require('node:fs/promises');
+const { ethers } = require('ethers')
 const express = require('express')
 const app = express()
 const cors = require('cors')
 const axios = require('axios')
 const CreateXChainContract = require('./xccontract')
 const contractAddresses = require('./constants/contract-addresses.json')
+const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
+const { poseidon } = require('circomlibjs-old');
+const { backupTreeFileName } = require('./constants/misc');
+
 const corsOpts = {
   origin: ["https://holonym.io", "https://holonym.id","https://app.holonym.io","https://app.holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
   optionsSuccessStatus: 200 // For legacy browser support
@@ -49,6 +55,10 @@ const init = async () => {
 const idServerUrl = process.env.NODE_ENV === "development" ? "http://localhost:3000" : "https://id-server.holonym.io";
 console.log("idServerUrl", idServerUrl);
 
+let treeHasBeenInitialized = false;
+const tree = new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
+let leafCountAtLastBackup = 0;
+
 const addLeaf = async (callParams) => {
 //  console.log("callParams", callParams)
 console.log("call params r", callParams)
@@ -75,6 +85,16 @@ const writeProof = async (proofContractName, callParams) => {
   return result;
 }
 
+
+async function backupTree(tree) {
+  try {
+    console.log('backing up merkle tree')
+    await fsPromises.writeFile(backupTreeFileName, JSON.stringify(tree));
+    leafCountAtLastBackup = tree.leaves.length;
+  } catch (err) {
+    console.log(err)
+  }
+}
 
 /**
  * @param {object} credsToStore should contain three params each of type string 
@@ -127,9 +147,72 @@ app.get('/getLeaves/:network', async (req, res) => {
   res.send(leaves.map(leaf=>leaf.toString()));
 })
 
+app.get('/getTree', async (req, res) => {
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const timeout = new Date().getTime() + 60 * 1000;
+  while (new Date().getTime() <= timeout && !treeHasBeenInitialized) {
+    await sleep(50);
+  }
+  if (!treeHasBeenInitialized) {
+    return res.status(500).json({ error: 'Merkle tree has not been initialized' });
+  }
+
+  // Update tree
+  const leavesInContract = (await goerliHub.getLeaves()).map(leaf => leaf.toString());
+  const newLeaves = leavesInContract.filter(leaf => !tree.leaves.includes(leaf));
+  for (const leaf of newLeaves) {
+    tree.insert(leaf);
+  }
+
+  if (tree.leaves.length - leafCountAtLastBackup >= 1) {
+    await backupTree(tree);
+  }
+
+  return res.status(200).json(tree);
+})
+
 app.get('/', (req, res) => {
   res.send('For this endpoint, POST your addLeaf parameters to /addLeaf and it will submit an addLeaf() transaction to Hub')
 })
+
+
+function poseidonHashQuinary(input) {
+  if (input.length !== 5 || !Array.isArray(input)) {
+    throw new Error("input must be an array of length 5");
+  }
+  return poseidon(input.map((x) => ethers.BigNumber.from(x).toString())).toString();
+}
+
+async function initializeTree() {
+  console.log('Initializing in-memory merkle tree')
+  console.time('tree-initialization')
+  // Initialize tree from backup. This step ensures that we can respond to getTree 
+  // requests immediately after this Node.js process restarts. It might take hours to 
+  // reconstruct the tree from leaves in the smart contract.
+  try {
+    const backupTreeStr = await fsPromises.readFile(backupTreeFileName, 'utf8');
+    const backupTree = JSON.parse(backupTreeStr);
+    tree._nodes = backupTree._nodes;
+    tree._root = backupTree._root;
+    tree._zeroes = backupTree._zeroes;
+    leafCountAtLastBackup = tree.leaves.length;
+  } catch (err) {
+    console.log(err);
+  }
+
+  // Initialize tree from contract
+  const leaves = (await goerliHub.getLeaves()).map(leaf => leaf.toString());
+  for (const leaf of leaves) {
+    tree.insert(leaf);
+  }
+  treeHasBeenInitialized = true;
+  console.log('Merkle tree in memory has been initialized')
+  console.timeEnd('tree-initialization')
+
+  await backupTree(tree);
+}
+
+initializeTree()
 
 app.listen(port, () => {})
 
