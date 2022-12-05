@@ -1,6 +1,6 @@
 require("dotenv").config();
 const { deployTestingContracts } = require("./scripts/deploy-testing-contracts.js");
-const abis = require("./constants/abis.json");
+const abis = require("./constants/abis");
 let addresses;
 if(process.env.HARDHAT_TESTING) { 
     // deployTestingContracts().then(a=>address=a) 
