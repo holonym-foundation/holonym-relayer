@@ -147,7 +147,7 @@ app.get('/getLeaves/:network', async (req, res) => {
   res.send(leaves.map(leaf=>leaf.toString()));
 })
 
-app.get('/getTree', async (req, res) => {
+app.get('/getTree/:network', async (req, res) => {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const timeout = new Date().getTime() + 60 * 1000;
   while (new Date().getTime() <= timeout && !treeHasBeenInitialized) {
@@ -157,9 +157,9 @@ app.get('/getTree', async (req, res) => {
     return res.status(500).json({ error: 'Merkle tree has not been initialized' });
   }
 
+  // TODO: 
   // Update tree
-  const leavesInContract = (await goerliHub.getLeaves()).map(leaf => leaf.toString());
-  const newLeaves = leavesInContract.filter(leaf => !tree.leaves.includes(leaf));
+  const newLeaves = (await xcontracts[req.params.network].getLeavesFrom(tree.leaves.length)).map(leaf => leaf.toString());
   for (const leaf of newLeaves) {
     tree.insert(leaf);
   }
