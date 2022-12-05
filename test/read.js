@@ -10,7 +10,7 @@ chai.use(chaiHTTP);
 
 const NETWORK_NAME = "hardhat"; //when testing, the network name is just hardhat not, e.g., arbitrum
 
-describe.only("Smart contract reading", function () {
+describe("Smart contract reading", function () {
     before(async function () {
         this.server = await app_;
         this.request = chai.request(this.server);
@@ -18,15 +18,18 @@ describe.only("Smart contract reading", function () {
         this.hhHub = this.xcHub.contracts["hardhat"];
     })
 
-    describe("getting leaves", function() {
-        it("works for empty leaves", async function() {
+    describe("Empty Set", function() {
+        it("works for empty set of leaves", async function() {
             expect(await this.hhHub.getLeaves()).to.deep.equal([]);
             expect(await this.hhHub.getLeavesFrom(0)).to.deep.equal([]);
             this.request.get("/getLeaves/hardhat").end((err,response)=>{
                expect(response.body).to.deep.equal([]);
             })
         });
-        it("getLeavesFrom works for multiple leaves", async function() {
+    });
+    describe("Non-empty sets", function() {
+        before(async function() {
+            // Add 3 leaves:
             for (const leafParams of testLeaves.slice(0,3)) {
                 await this.xcHub.addLeaf(
                     leafParams.issuer, 
@@ -36,7 +39,9 @@ describe.only("Smart contract reading", function () {
                     Object.keys(leafParams.zkp).map(k=>leafParams.zkp[k]), // Convert struct to ethers format
                     leafParams.zkpInputs
                 )
-            }
+            };
+        });
+        it("getLeavesFrom works for multiple leaves", async function() {
             const leaves = (await this.xcHub.getLeaves())["hardhat"]
             expect((await this.xcHub.getLeavesFrom(0))["hardhat"]).to.deep.equal(leaves)
             expect((await this.xcHub.getLeavesFrom(1))["hardhat"]).to.deep.equal(leaves.slice(1))
