@@ -153,16 +153,26 @@ app.get('/getTree/:network', async (req, res) => {
   if (!(req.params.network in trees)) {
     return res.status(500).json({ error: 'Merkle tree has not been initialized' });
   }
-
-  const newLeaves = (await xcontracts[req.params.network].getLeavesFrom(trees[req.params.network].leaves.length)).map(leaf => leaf.toString());
+  let tree = trees[req.params.network];
+  console.log("getTree.0")
+  console.log(xcontracts["Hub"])
+  console.log(xcontracts["Hub"].contracts[req.params.network])
+  const currentLeaves = tree._nodes[0];
+  const newLeaves = (
+    await xcontracts["Hub"].contracts[req.params.network]
+    .getLeavesFrom(currentLeaves.length)
+  )
+  .map(leaf => leaf.toString());
+  console.log("getTree.1")
   for (const leaf of newLeaves) {
     tree.insert(leaf);
   }
+  console.log("getTree.2")
 
-  if (tree.leaves.length - leafCountAtLastBackup >= 1) {
+  if (currentLeaves) {
     await backupTree(tree);
   }
-
+  console.log("getTree.3")
   return res.status(200).json(tree);
 })
 

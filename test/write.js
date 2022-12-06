@@ -29,14 +29,16 @@ describe.only("Writing", function () {
             encryptedCredentials: randomBytes(16).toString("hex"),
             encryptedSymmetricKey: randomBytes(16).toString("hex"),
         }
+        // Add a test leaf (zkpInputs[1] is new leaf that will be added to the Merkle tree)
+        const newLeaf = BigInt(testLeaves[0].zkpInputs[1]).toString() 
         await chai.request(this.server).post("/addLeaf").send({addLeafArgs: testLeaves[0], credsToStore: fakeCredsToStore})
         const response = await chai.request(this.server).get("/getLeaves/hardhat");
-        expect(response.body).to.deep.equal([BigInt(testLeaves[0].zkpInputs[1]).toString()]) // zkpInputs[1] is the new leaf that should be added to the Merkle tree
+        expect(response.body).to.deep.equal([newLeaf]);
         
         const response2 = await chai.request(this.server).get("/getTree/hardhat");
-        console.log(response2);
         const merkleTree = response2.body;
-        console.log("proof", createMerkleProof(merkleTree));
+        console.log("mt", merkleTree);
+        console.log("proof", await createMerkleProof(newLeaf, merkleTree));
 
     });
 
