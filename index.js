@@ -9,7 +9,7 @@ const CreateXChainContract = require('./xccontract')
 const contractAddresses = require('./constants/contract-addresses.json')
 const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
 const { poseidon } = require('circomlibjs-old');
-const { backupTreeFileName } = require('./constants/misc');
+const { backupTreePath } = require('./constants/misc');
 
 const corsOpts = {
   origin: ["https://holonym.io", "https://holonym.id","https://app.holonym.io","https://app.holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
@@ -41,22 +41,25 @@ const port = process.env.PORT || 3000;
 // });
 
 let xcontracts = {}
-let goerliHub; // Keep the same testnet Hub for backwards compatability (at least for now)
-const init = async () => {
+
+const idServerUrl = process.env.NODE_ENV === "development" ? "http://127.0.0.1:3000" : "https://id-server.holonym.io";
+
+// let treeHasBeenInitialized = false;
+const trees = {} //new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
+// let leafCountAtLastBackup = 0;
+
+
+const init = async (networkNames) => {
   for (const contractName of Object.keys(contractAddresses)) {
     xcontracts[contractName] = await CreateXChainContract("Hub");
   }
-  // xcontracts["Hub"] = await CreateXChainContract("Hub");
-  goerliHub = xcontracts["Hub"].contracts["optimism-goerli"];
-
+  for (const networkName of networkNames) {
+    console.log("abc")
+    await initializeTree(networkName);
+  }
+  
 };
 
-const idServerUrl = process.env.NODE_ENV === "development" ? "http://127.0.0.1:3000" : "https://id-server.holonym.io";
-console.log("idServerUrl", idServerUrl);
-
-let treeHasBeenInitialized = false;
-const tree = new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
-let leafCountAtLastBackup = 0;
 
 const addLeaf = async (callParams) => {
 //  console.log("callParams", callParams)
@@ -83,10 +86,10 @@ const writeProof = async (proofContractName, callParams) => {
 }
 
 
-async function backupTree(tree) {
+async function backupTree(tree, networkName) {
   try {
     console.log('backing up merkle tree')
-    await fsPromises.writeFile(backupTreeFileName, JSON.stringify(tree));
+    await fsPromises.writeFile(`${backupTreePath}/${networkName}.json`, JSON.stringify(tree));
     leafCountAtLastBackup = tree.leaves.length;
   } catch (err) {
     console.log(err)
@@ -134,10 +137,7 @@ app.get('/writeProof/:proofContractName', async (req, res) => {
   }
 })
 
-app.get('/getLeaves', async (req, res) => {
-  const leaves = await goerliHub.getLeaves();
-  res.send(leaves.map(leaf=>leaf.toString()));
-})
+
 
 app.get('/getLeaves/:network', async (req, res) => {
   const leaves = await xcontracts["Hub"].contracts[req.params.network].getLeaves();
@@ -145,18 +145,16 @@ app.get('/getLeaves/:network', async (req, res) => {
 })
 
 app.get('/getTree/:network', async (req, res) => {
-  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-  const timeout = new Date().getTime() + 60 * 1000;
-  while (new Date().getTime() <= timeout && !treeHasBeenInitialized) {
-    await sleep(50);
-  }
-  if (!treeHasBeenInitialized) {
+  // const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  // const timeout = new Date().getTime() + 60 * 1000;
+  // while (new Date().getTime() <= timeout && !treeHasBeenInitialized) {
+  //   await sleep(50);
+  // }
+  if (!(req.params.network in trees)) {
     return res.status(500).json({ error: 'Merkle tree has not been initialized' });
   }
 
-  // TODO: 
-  // Update tree
-  const newLeaves = (await xcontracts[req.params.network].getLeavesFrom(tree.leaves.length)).map(leaf => leaf.toString());
+  const newLeaves = (await xcontracts[req.params.network].getLeavesFrom(trees[req.params.network].leaves.length)).map(leaf => leaf.toString());
   for (const leaf of newLeaves) {
     tree.insert(leaf);
   }
@@ -180,41 +178,43 @@ function poseidonHashQuinary(input) {
   return poseidon(input.map((x) => ethers.BigNumber.from(x).toString())).toString();
 }
 
-async function initializeTree() {
-  console.log('Initializing in-memory merkle tree')
-  console.time('tree-initialization')
+async function initializeTree(networkName) {
+  let tree = new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
+  if(!(networkName in xcontracts["Hub"].contracts)) return; // If it doesn't support the network, abort and return an empty Merkle Tree
+
+    console.log("Initializing in-memory merkle tree")
+    console.time("tree-initialization")
+
   // Initialize tree from backup. This step ensures that we can respond to getTree 
   // requests immediately after this Node.js process restarts. It might take hours to 
   // reconstruct the tree from leaves in the smart contract.
   try {
-    const backupTreeStr = await fsPromises.readFile(backupTreeFileName, 'utf8');
+    const backupTreeStr = await fsPromises.readFile(`${backupTreePath}/${networkName}.json`, 'utf8');
     const backupTree = JSON.parse(backupTreeStr);
     tree._nodes = backupTree._nodes;
     tree._root = backupTree._root;
     tree._zeroes = backupTree._zeroes;
-    leafCountAtLastBackup = tree.leaves.length;
   } catch (err) {
-    console.log(err);
+    console.error("initializeTree: ", err);
   }
-
   // Initialize tree from contract
-  const leaves = (await goerliHub.getLeaves()).map(leaf => leaf.toString());
-  for (const leaf of leaves) {
+  const numLeaves = tree._nodes[0].length;
+  const newLeaves = (await xcontracts["Hub"].contracts[networkName].getLeavesFrom(numLeaves)).map(leaf => leaf.toString());
+  for (const leaf of newLeaves) {
     tree.insert(leaf);
   }
-  treeHasBeenInitialized = true;
-  console.log('Merkle tree in memory has been initialized')
-  console.timeEnd('tree-initialization')
 
+  // treeHasBeenInitialized = true;
+  console.log("Merkle tree in memory has been initialized")
+  console.timeEnd("tree-initialization")
+  trees[networkName] = tree;
   await backupTree(tree);
 }
-
-initializeTree()
 
 app.listen(port, () => {})
 
 module.exports.appPromise = new Promise(
   function(resolve, reject){
-    init().then(resolve(app))
+    init(["hardhat", "optimism-goerli"]).then(resolve(app))
   }
 ); // For testing app with Chai

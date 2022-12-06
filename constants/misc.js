@@ -1,1 +1,1 @@
-module.exports.backupTreeFileName = 'backup-tree.json';
+module.exports.backupTreePath= './backup-trees';

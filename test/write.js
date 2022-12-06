@@ -7,6 +7,7 @@ require("@nomiclabs/hardhat-ethers");
 const app_ = require("../index.js").appPromise;
 const chaiHTTP = require("chai-http");
 const { randomBytes } = require("ethers/lib/utils");
+const { createMerkleProof } = require("../utils/utils");
 chai.use(chaiHTTP);
 
 const NETWORK_NAME = "hardhat"; //when testing, the network name is just hardhat not, e.g., arbitrum
@@ -31,7 +32,11 @@ describe.only("Writing", function () {
         await chai.request(this.server).post("/addLeaf").send({addLeafArgs: testLeaves[0], credsToStore: fakeCredsToStore})
         const response = await chai.request(this.server).get("/getLeaves/hardhat");
         expect(response.body).to.deep.equal([BigInt(testLeaves[0].zkpInputs[1]).toString()]) // zkpInputs[1] is the new leaf that should be added to the Merkle tree
-            
+        
+        const response2 = await chai.request(this.server).get("/getTree/hardhat");
+        console.log(response2);
+        const merkleTree = response2.body;
+        console.log("proof", createMerkleProof(merkleTree));
 
     });
 
