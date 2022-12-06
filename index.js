@@ -151,10 +151,9 @@ app.get('/getTree/:network', async (req, res) => {
   //   await sleep(50);
   // }
   if (!(req.params.network in trees)) {
-    return res.status(500).json({ error: 'Merkle tree has not been initialized' });
+    return res.status(500).json({ error: "Merkle tree has not been initialized" });
   }
   let tree = trees[req.params.network];
-  console.log("getTree.0")
   console.log(xcontracts["Hub"])
   console.log(xcontracts["Hub"].contracts[req.params.network])
   const currentLeaves = tree._nodes[0];
@@ -163,16 +162,13 @@ app.get('/getTree/:network', async (req, res) => {
     .getLeavesFrom(currentLeaves.length)
   )
   .map(leaf => leaf.toString());
-  console.log("getTree.1")
   for (const leaf of newLeaves) {
     tree.insert(leaf);
   }
-  console.log("getTree.2")
 
   if (currentLeaves) {
-    await backupTree(tree);
+    await backupTree(tree, req.params.network);
   }
-  console.log("getTree.3")
   return res.status(200).json(tree);
 })
 
@@ -190,6 +186,7 @@ function poseidonHashQuinary(input) {
 
 async function initializeTree(networkName) {
   let tree = new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
+  if(networkName === "hardhat") { console.error("WARNING: not initializing hardhat tree from backup, as hardhat network's state is not persistent and this would load a deleted tree"); return }
   if(!(networkName in xcontracts["Hub"].contracts)) return; // If it doesn't support the network, abort and return an empty Merkle Tree
 
     console.log("Initializing in-memory merkle tree")

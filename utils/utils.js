@@ -15,7 +15,6 @@ const deployPoseidon = async () => {
     return await PoseidonContractFactory.deploy();
 }
 
-poseidon
 /* creates a Merkle proof in the appropriate JSON format -- leaf is the leaf to make a proof for, and treeData is the data returned from the relayer's /getTree endpoint*/
 async function createMerkleProof(leaf, treeData) {
     const tree = new IncrementalMerkleTree(poseidon, 14, "0", 5);
