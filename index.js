@@ -54,8 +54,7 @@ const init = async (networkNames) => {
     xcontracts[contractName] = await CreateXChainContract("Hub");
   }
   for (const networkName of networkNames) {
-    console.log("abc")
-    await initializeTree(networkName);
+    await initTree(networkName);
   }
   
 };
@@ -88,7 +87,7 @@ const writeProof = async (proofContractName, callParams) => {
 
 async function backupTree(tree, networkName) {
   try {
-    console.log('backing up merkle tree')
+    console.log("backing up merkle tree")
     await fsPromises.writeFile(`${backupTreePath}/${networkName}.json`, JSON.stringify(tree));
     leafCountAtLastBackup = tree.leaves.length;
   } catch (err) {
@@ -184,9 +183,9 @@ function poseidonHashQuinary(input) {
   return poseidon(input.map((x) => ethers.BigNumber.from(x).toString())).toString();
 }
 
-async function initializeTree(networkName) {
+async function initTree(networkName) {
   let tree = new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
-  if(networkName === "hardhat") { console.error("WARNING: not initializing hardhat tree from backup, as hardhat network's state is not persistent and this would load a deleted tree"); return }
+  if(networkName === "hardhat") { console.error("WARNING: not initializing hardhat tree from backup, as hardhat network's state is not persistent and this would load a deleted tree"); trees["hardhat"] = tree; return }
   if(!(networkName in xcontracts["Hub"].contracts)) return; // If it doesn't support the network, abort and return an empty Merkle Tree
 
     console.log("Initializing in-memory merkle tree")
@@ -202,7 +201,7 @@ async function initializeTree(networkName) {
     tree._root = backupTree._root;
     tree._zeroes = backupTree._zeroes;
   } catch (err) {
-    console.error("initializeTree: ", err);
+    console.error("initTree: ", err);
   }
   // Initialize tree from contract
   const numLeaves = tree._nodes[0].length;
