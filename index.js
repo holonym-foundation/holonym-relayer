@@ -225,7 +225,7 @@ async function initTree(networkName) {
   console.log("Merkle tree in memory has been initialized")
   console.timeEnd("tree-initialization")
   trees[networkName] = tree;
-  await backupTree(tree);
+  await backupTree(tree, networkName);
 }
 
 app.listen(port, () => {})
