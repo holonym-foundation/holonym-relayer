@@ -10,6 +10,7 @@ const chaiHTTP = require("chai-http");
 const { poseidon } = require('circomlibjs-old');
 const { randomBytes } = require("ethers/lib/utils");
 const { createMerkleProof } = require("../utils/utils");
+const { readFileSync } = require("fs");
 chai.use(chaiHTTP);
 
 
@@ -44,15 +45,15 @@ describe.only("Writing", function () {
         console.log("merkle tree ", JSON.stringify(merkleTree));
         const [account, anotherAccount] = await ethers.getSigners();
         const [issuerAddress, nullifier, field0, field1, field2, field3] = testLeaves[0].privatePreimage;
-        const actionId = 6969696969696969696;
+        const actionId = "69696969";
         const masala = poseidon([actionId, nullifier]);
-        console.log(`${merkleProof.formattedProof[0]} == ${newLeaf} == poseidon(${testLeaves[0].privatePreimage}) == ${poseidon(testLeaves[0].privatePreimage)}`);
+        
         const proofArgs = `${[
             merkleProof.root, 
             ethers.BigNumber.from(anotherAccount.address).toString(), // It doesn't matter which address
             issuerAddress,
-            masala,
             actionId,
+            masala,
             field0,
             field1,
             field2,
@@ -70,7 +71,6 @@ describe.only("Writing", function () {
 
         // const zkProof = await 
         // const response3 = await
-
     });
 
     describe("Non-empty sets", function() {
