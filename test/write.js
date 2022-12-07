@@ -1,4 +1,5 @@
-
+const util = require("util");
+const exec = util.promisify(require("child_process").exec);
 const chai = require("chai");
 const { expect } = chai;
 const CreateCrossChainContract = require("../xccontract");
@@ -6,9 +7,11 @@ const testLeaves = require("./test-leaves.json");
 require("@nomiclabs/hardhat-ethers");
 const app_ = require("../index.js").appPromise;
 const chaiHTTP = require("chai-http");
+const { poseidon } = require('circomlibjs-old');
 const { randomBytes } = require("ethers/lib/utils");
 const { createMerkleProof } = require("../utils/utils");
 chai.use(chaiHTTP);
+
 
 const NETWORK_NAME = "hardhat"; //when testing, the network name is just hardhat not, e.g., arbitrum
 
@@ -30,15 +33,43 @@ describe.only("Writing", function () {
             encryptedSymmetricKey: randomBytes(16).toString("hex"),
         }
         // Add a test leaf (zkpInputs[1] is new leaf that will be added to the Merkle tree)
-        const newLeaf = BigInt(testLeaves[0].zkpInputs[1]).toString() 
-        await chai.request(this.server).post("/addLeaf").send({addLeafArgs: testLeaves[0], credsToStore: fakeCredsToStore})
+        const newLeaf = BigInt(testLeaves[0].publicOALParams.zkpInputs[1]).toString() 
+        await chai.request(this.server).post("/addLeaf").send({addLeafArgs: testLeaves[0].publicOALParams, credsToStore: fakeCredsToStore})
         const response = await chai.request(this.server).get("/getLeaves/hardhat");
         expect(response.body).to.deep.equal([newLeaf]);
         
         const response2 = await chai.request(this.server).get("/getTree/hardhat");
         const merkleTree = response2.body;
-        console.log("mt", merkleTree);
-        console.log("proof", await createMerkleProof(newLeaf, merkleTree));
+        const merkleProof = await createMerkleProof(newLeaf, merkleTree);
+        console.log("merkle tree ", JSON.stringify(merkleTree));
+        const [account, anotherAccount] = await ethers.getSigners();
+        const [issuerAddress, nullifier, field0, field1, field2, field3] = testLeaves[0].privatePreimage;
+        const actionId = 6969696969696969696;
+        const masala = poseidon([actionId, nullifier]);
+        console.log(`${merkleProof.formattedProof[0]} == ${newLeaf} == poseidon(${testLeaves[0].privatePreimage}) == ${poseidon(testLeaves[0].privatePreimage)}`);
+        const proofArgs = `${[
+            merkleProof.root, 
+            ethers.BigNumber.from(anotherAccount.address).toString(), // It doesn't matter which address
+            issuerAddress,
+            masala,
+            actionId,
+            field0,
+            field1,
+            field2,
+            field3,
+            nullifier
+        ].join(" ")
+        } ${ merkleProof.formattedProof.join(" ") }`;
+        await exec(`zokrates compute-witness -a ${proofArgs} -i zk/compiled/antiSybil.out -o tmp.witness`);
+        await exec(`zokrates generate-proof -i zk/compiled/antiSybil.out -w tmp.witness -p zk/pvkeys/antiSybil.proving.key -j tmp.proof.json`);
+        const proofObject = JSON.parse(readFileSync("tmp.proof.json").toString());
+        console.log("proof object", proofObject);
+        // await expect(
+        //     this.resStore.prove(this.proofObject.proof, this.proofObject.inputs)
+        // ).to.be.revertedWith("Proof must come from authority address");
+
+        // const zkProof = await 
+        // const response3 = await
 
     });
 

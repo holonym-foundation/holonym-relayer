@@ -43,6 +43,7 @@ async function createMerkleProof(leaf, treeData) {
       leaf: leaf_,
       path: path_,
       indices: indices_,
+      formattedProof: [leaf_, ...path_, ...indices_].flat()
     };
   }
   

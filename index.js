@@ -74,10 +74,10 @@ const addLeaf = async (callParams) => {
   return result;
 }
 
-const writeProof = async (proofContractName, callParams) => {
+const writeProof = async (proofContractName, networkName, callParams) => {
   
   const { zkp, zkpInputs } = callParams;
-  const result = await xcontracts[proofContractName].addLeaf(
+  const result = await xcontracts[proofContractName].contracts[networkName].addLeaf(
     Object.keys(zkp).map(k=>zkp[k]), // Convert struct to ethers format
     zkpInputs
   );
@@ -123,11 +123,10 @@ app.post('/addLeaf', async (req, res, next) => {
   }
 })
 
-app.get('/writeProof/:proofContractName', async (req, res) => {
+app.get('/writeProof/:network/:chain', async (req, res) => {
   console.log('writeProof called with args ', req.body.writeProofArgs);
   try {
-    const txReceipt = await writeProof(req.body.addLeafArgs);
-
+    const txReceipt = await writeProof(req.params.proofContractName, req.params.network, req.body.addLeafArgs);
     res.status(200).json(txReceipt);
   } catch(e) {
     console.error(e);
