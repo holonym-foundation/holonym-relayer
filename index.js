@@ -1,6 +1,6 @@
 require('dotenv').config()
 const fsPromises = require('node:fs/promises');
-const { ethers } = require('ethers')
+const { ethers } = require('./utils/get-ethers.js');
 const express = require('express')
 const app = express()
 const cors = require('cors')
