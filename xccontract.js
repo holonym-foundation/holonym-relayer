@@ -1,5 +1,5 @@
 require("dotenv").config();
-require("@nomiclabs/hardhat-ethers");
+const { ethers } = require("./utils/get-ethers.js")
 const abis = require("./constants/abis");
 let { getAddresses, initAddresses } = require("./utils/contract-addresses");
 
