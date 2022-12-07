@@ -82,7 +82,6 @@ async function deployTestingContracts(addresses) {
     const poc = COUNTRYVERIFIER_ADDRESS ? await pocFactory.attach(COUNTRYVERIFIER_ADDRESS) : await pocFactory.deploy();
     await poc.deployed();
     console.log("ProofOfCountry address is", poc.address)
-    console.log("roaklfjnalksdjfnaklsjnas", await router.routes("USResident"))
     if (await router.routes("USResident") === "0x0000000000000000000000000000000000000000") await router.addRoute("USResident", poc.address);
     
     // Yeah the nomenclature is bad; the same type of contract is called Proof of Country and Anti Sybil Verifier despite them both being verifiers
@@ -92,7 +91,6 @@ async function deployTestingContracts(addresses) {
     console.log("AntiSybilVerifier address is", asv.address)
     
     if (await router.routes("SybilResistance") === "0x0000000000000000000000000000000000000000") await router.addRoute("SybilResistance", asv.address);
-    console.log("ROUTEabc SybilResistance", await router.routes("SybilResistance"))
 
     const iurFactory = await ethers.getContractFactory("IsUSResident"); 
     const iur = RESSTORE_ADDRESS ? await iurFactory.attach(RESSTORE_ADDRESS) : await (iurFactory).deploy(hub.address, "0x8281316ac1d51c94f2de77575301cef615adea84");

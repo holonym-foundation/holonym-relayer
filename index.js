@@ -86,7 +86,7 @@ const writeProof = async (proofContractName, networkName, callParams) => {
     Object.keys(proof).map(k=>proof[k]), // Convert struct to ethers format
     inputs
   )
-  const result = await xcontracts[proofContractName].contracts[networkName].proofIsValid(
+  const result = await xcontracts[proofContractName].contracts[networkName].prove(
     Object.keys(proof).map(k=>proof[k]), // Convert struct to ethers format
     inputs
   );

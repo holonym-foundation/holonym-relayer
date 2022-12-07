@@ -7,12 +7,11 @@ const testLeaves = require("./test-leaves.json");
 require("@nomiclabs/hardhat-ethers");
 const app_ = require("../index.js").appPromise;
 const chaiHTTP = require("chai-http");
-const { poseidon } = require('circomlibjs-old');
+const { poseidon } = require("circomlibjs-old");
 const { randomBytes } = require("ethers/lib/utils");
 const { createMerkleProof } = require("../utils/utils");
 const { readFileSync } = require("fs");
 chai.use(chaiHTTP);
-
 
 const NETWORK_NAME = "hardhat"; //when testing, the network name is just hardhat not, e.g., arbitrum
 
@@ -22,8 +21,7 @@ describe.only("Writing", function () {
         this.request = chai.request(this.server);
         this.xcHub = await CreateCrossChainContract("Hub");
         this.xcSR = await CreateCrossChainContract("SybilResistance");
-        this.xcUS = await CreateCrossChainContract("IsUSResident");
-        
+        this.xcUS = await CreateCrossChainContract("IsUSResident");        
     })
 
 
@@ -64,11 +62,18 @@ describe.only("Writing", function () {
         await exec(`zokrates compute-witness -a ${proofArgs} -i zk/compiled/antiSybil.out -o tmp.witness`);
         await exec(`zokrates generate-proof -i zk/compiled/antiSybil.out -w tmp.witness -p zk/pvkeys/antiSybil.proving.key -j tmp.proof.json`);
         const proofObject = JSON.parse(readFileSync("tmp.proof.json").toString());
-
+        
         // Submit the proof to the relayer
-        const response3 = await chai.request(this.server).post("/writeProof/SybilResistance/hardhat").send({writeProofArgs: proofObject});
-        // console.log(response3)
-        console.log(response3.body)
+        console.log("sending to relayer....")
+        await chai.request(this.server).post("/writeProof/SybilResistance/hardhat").send({writeProofArgs: proofObject});
+
+        // Check that it has been written:
+        // Wait for the block to mine
+        const delay = ms => new Promise(res => setTimeout(res, ms));
+        // Wait 30s
+        // await delay(30000)
+        expect(await this.xcSR.isUniqueForAction(anotherAccount.address, actionId)).to.deep.equal({hardhat : true});
+        
         
     });
 });
