@@ -47,7 +47,7 @@ describe.only("Writing", function () {
         const [issuerAddress, nullifier, field0, field1, field2, field3] = testLeaves[0].privatePreimage;
         const actionId = "69696969";
         const masala = poseidon([actionId, nullifier]);
-        
+
         const proofArgs = `${[
             merkleProof.root, 
             ethers.BigNumber.from(anotherAccount.address).toString(), // It doesn't matter which address
@@ -64,62 +64,11 @@ describe.only("Writing", function () {
         await exec(`zokrates compute-witness -a ${proofArgs} -i zk/compiled/antiSybil.out -o tmp.witness`);
         await exec(`zokrates generate-proof -i zk/compiled/antiSybil.out -w tmp.witness -p zk/pvkeys/antiSybil.proving.key -j tmp.proof.json`);
         const proofObject = JSON.parse(readFileSync("tmp.proof.json").toString());
-        console.log("proof object", proofObject);
-        // await expect(
-        //     this.resStore.prove(this.proofObject.proof, this.proofObject.inputs)
-        // ).to.be.revertedWith("Proof must come from authority address");
 
-        // const zkProof = await 
-        // const response3 = await
-    });
-
-    describe("Non-empty sets", function() {
-        // before(async function() {
-        //     // Add 3 leaves:
-        //     for (const leafParams of testLeaves.slice(0,3)) {
-        //         await this.xcHub.addLeaf(
-        //             leafParams.issuer, 
-        //             leafParams.v, 
-        //             leafParams.r, 
-        //             leafParams.s, 
-        //             Object.keys(leafParams.zkp).map(k=>leafParams.zkp[k]), // Convert struct to ethers format
-        //             leafParams.zkpInputs
-        //         )
-        //     };
-        // });
-        // it("getLeavesFrom works for multiple leaves", async function() {
-        //     const leaves = (await this.xcHub.getLeaves())["hardhat"]
-        //     expect((await this.xcHub.getLeavesFrom(0))["hardhat"]).to.deep.equal(leaves)
-        //     expect((await this.xcHub.getLeavesFrom(1))["hardhat"]).to.deep.equal(leaves.slice(1))
-        //     expect((await this.xcHub.getLeavesFrom(2))["hardhat"]).to.deep.equal(leaves.slice(2))
-        //     expect((await this.xcHub.getLeavesFrom(3))["hardhat"]).to.deep.equal([])
-        //     expect((await this.xcHub.getLeavesFrom(4))["hardhat"]).to.deep.equal([])
-        // });
-
-        // TODO: this test
-        it("Merkle tree updates work", async function() {
-            expect("TODO").to.equal("Not Implemented yet");
-            // Implementation here, code mixed with pseudocode for some unfinished lines:
-            // const leaves = (await this.xcHub.getLeaves())["hardhat"]
-            // let testTree = new MerkleTree(leaves) // instantiation here is just pseudocode
-            // this.request.get("/getTree/hardhat").end((err,response)=>{
-            //     expect(response.body).to.deep.equal(testTree.toJSON());
-            //  })
-            // let newLeaf = testTrees[3]
-            // testTree.add(newLeaf.zkpInputs[1]) // zkpInputs[1] is the new leaf
-            // await this.xcHub.addLeaf(
-            //     leafParams.issuer, 
-            //     leafParams.v, 
-            //     leafParams.r, 
-            //     leafParams.s, 
-            //     Object.keys(leafParams.zkp).map(k=>leafParams.zkp[k]), // Convert struct to ethers format
-            //     leafParams.zkpInputs
-            // )
-            // this.request.get("/getTree/hardhat").end((err,response)=>{
-            //     expect(response.body).to.deep.equal(testTree.toJSON());
-            //  })
-            
-        });
+        // Submit the proof to the relayer
+        const response3 = await chai.request(this.server).post("/writeProof/SybilResistance/hardhat").send({writeProofArgs: proofObject});
+        // console.log(response3)
+        console.log(response3.body)
         
     });
 });

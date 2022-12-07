@@ -1,30 +1,14 @@
 require("dotenv").config();
 require("@nomiclabs/hardhat-ethers");
-const { deployTestingContracts } = require("./scripts/deploy-testing-contracts.js");
 const abis = require("./constants/abis");
-let addresses;
-let addressesLoading;
+let { getAddresses, initAddresses } = require("./utils/contract-addresses");
 
-async function initAddresses (){
-    if(addresses) return;
-    
-    // This is run when initAddresses is called for the very first time
-    if(!addressesLoading) {
-        addressesLoading = true;
-        addresses = (process.env.HARDHAT_TESTING === "true") ? await deployTestingContracts() : require("./constants/contract-addresses.json");
-        addressesLoading = false;
-    }
-    // This loop is run when initAddresses is called twice so it doesn't try loading addresses twice
-    while(addressesLoading) {
-        await new Promise(resolve=>setTimeout(resolve, 500))
-    }
-    
-}
-
+let addresses; 
 const nets = process.env.NETWORKS // "mainnet" or "testnet"
 // Safely create a cross-chain contract wrapper, after addresses have loaded
 async function CreateXChainContract(...args) {
     await initAddresses();
+    addresses = getAddresses();
     return new XChainContract(...args);
 }
 // if(nets === "hardhat" && !process.env.HARDHAT_TESTING) { console.error("WARNING: need to run with npx hardhat test") }

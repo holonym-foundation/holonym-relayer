@@ -6,10 +6,11 @@ const app = express()
 const cors = require('cors')
 const axios = require('axios')
 const CreateXChainContract = require('./xccontract')
-const contractAddresses = require('./constants/contract-addresses.json')
 const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
 const { poseidon } = require('circomlibjs-old');
 const { backupTreePath } = require('./constants/misc');
+const { initAddresses, getAddresses } = require("./utils/contract-addresses");
+
 
 const corsOpts = {
   origin: ["https://holonym.io", "https://holonym.id","https://app.holonym.io","https://app.holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
@@ -47,11 +48,13 @@ const idServerUrl = process.env.NODE_ENV === "development" ? "http://127.0.0.1:3
 // let treeHasBeenInitialized = false;
 const trees = {} //new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
 // let leafCountAtLastBackup = 0;
-
+let addresses
 
 const init = async (networkNames) => {
-  for (const contractName of Object.keys(contractAddresses)) {
-    xcontracts[contractName] = await CreateXChainContract("Hub");
+  await initAddresses();
+  addresses = getAddresses();
+  for (const contractName of Object.keys(addresses)) {
+    xcontracts[contractName] = await CreateXChainContract(contractName);
   }
   for (const networkName of networkNames) {
     await initTree(networkName);
@@ -76,10 +79,16 @@ const addLeaf = async (callParams) => {
 
 const writeProof = async (proofContractName, networkName, callParams) => {
   
-  const { zkp, zkpInputs } = callParams;
-  const result = await xcontracts[proofContractName].contracts[networkName].addLeaf(
-    Object.keys(zkp).map(k=>zkp[k]), // Convert struct to ethers format
-    zkpInputs
+  const { proof, inputs } = callParams;
+  // console.log("contract", xcontracts[proofContractName].contracts[networkName])
+  // console.log("gitcode", await xcontracts[proofContractName].providers[networkName].getCode(xcontracts[proofContractName].contracts[networkName].address))
+  console.log(
+    Object.keys(proof).map(k=>proof[k]), // Convert struct to ethers format
+    inputs
+  )
+  const result = await xcontracts[proofContractName].contracts[networkName].proofIsValid(
+    Object.keys(proof).map(k=>proof[k]), // Convert struct to ethers format
+    inputs
   );
   return result;
 }
@@ -123,10 +132,13 @@ app.post('/addLeaf', async (req, res, next) => {
   }
 })
 
-app.get('/writeProof/:network/:chain', async (req, res) => {
+// proofContractName: "IsUSResident" or "SybilResistance"
+// network: "optimism-goerli", "hardhat", ...
+// writeProofArgs
+app.post('/writeProof/:proofContractName/:network', async (req, res) => {
   console.log('writeProof called with args ', req.body.writeProofArgs);
   try {
-    const txReceipt = await writeProof(req.params.proofContractName, req.params.network, req.body.addLeafArgs);
+    const txReceipt = await writeProof(req.params.proofContractName, req.params.network, req.body.writeProofArgs);
     res.status(200).json(txReceipt);
   } catch(e) {
     console.error(e);
