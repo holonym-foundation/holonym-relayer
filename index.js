@@ -5,6 +5,7 @@ const express = require('express')
 const app = express()
 const cors = require('cors')
 const axios = require('axios')
+const Mutex = require('async-mutex').Mutex;
 const CreateXChainContract = require('./xccontract')
 const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
 const { poseidon } = require('circomlibjs-old');
@@ -45,6 +46,9 @@ let xcontracts = {}
 
 const idServerUrl = process.env.NODE_ENV === "development" ? "http://127.0.0.1:3000" : "https://id-server.holonym.io";
 
+// mutexes are used to prevent race conditions from occuring during tree updates
+const mutexes = {};
+
 // let treeHasBeenInitialized = false;
 const trees = {} //new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
 // let leafCountAtLastBackup = 0;
@@ -58,6 +62,7 @@ const init = async (networkNames) => {
   }
   for (const networkName of networkNames) {
     await initTree(networkName);
+    mutexes[networkName] = new Mutex();
   }
   
 };
@@ -104,6 +109,24 @@ async function backupTree(tree, networkName) {
   }
 }
 
+async function updateTree(network) {
+  try {
+    await mutexes[network]?.runExclusive(async () => {
+      const contract = xcontracts["Hub"].contracts[network];
+      const index = trees[network].leaves.length;
+      const newLeaves = (await contract.getLeavesFrom(index)).map(leaf => leaf.toString());
+      for (const leaf of newLeaves) {
+        trees[network].insert(leaf);
+      }
+      if (trees[network].leaves) {
+        await backupTree(trees[network], network);
+      }
+    });
+  } catch (err) {
+    console.log(err)
+  }
+}
+
 /**
  * @param {object} credsToStore should contain three params each of type string 
  */
@@ -123,6 +146,7 @@ app.post('/addLeaf', async (req, res, next) => {
   try {
     const txReceipt = await addLeaf(req.body.addLeafArgs);
     // if addLeaf doesn't throw, we assume tx was successful
+    updateTree(req.params.network);
     await postUserCredentials(req.body.credsToStore)
     res.status(200).json(txReceipt);
   } catch(e) {
@@ -155,30 +179,16 @@ app.get('/getLeaves/:network', async (req, res) => {
 })
 
 app.get('/getTree/:network', async (req, res) => {
-  // const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
-  // const timeout = new Date().getTime() + 60 * 1000;
-  // while (new Date().getTime() <= timeout && !treeHasBeenInitialized) {
-  //   await sleep(50);
-  // }
   if (!(req.params.network in trees)) {
     return res.status(500).json({ error: "Merkle tree has not been initialized" });
   }
   let tree = trees[req.params.network];
   console.log(xcontracts["Hub"])
   console.log(xcontracts["Hub"].contracts[req.params.network])
-  const currentLeaves = tree._nodes[0];
-  const newLeaves = (
-    await xcontracts["Hub"].contracts[req.params.network]
-    .getLeavesFrom(currentLeaves.length)
-  )
-  .map(leaf => leaf.toString());
-  for (const leaf of newLeaves) {
-    tree.insert(leaf);
-  }
 
-  if (currentLeaves) {
-    await backupTree(tree, req.params.network);
-  }
+  // Trigger tree update. Tree is updated asynchronously so that request can be served immediately
+  updateTree(req.params.network);
+
   return res.status(200).json(tree);
 })
 
