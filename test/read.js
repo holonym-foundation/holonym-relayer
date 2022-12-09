@@ -30,17 +30,17 @@ describe("Smart contract reading", function () {
             })
         });
     });
-    describe("Non-empty sets", function() {
+    describe.only("Non-empty sets", function() {
         before(async function() {
-            // Add 3 leaves:
-            for (const leafParams of testLeaves.slice(0,3)) {
+            // Add 3 test leaves:
+            for (const leafParams of testLeaves.slice(0,3).map(x=>x.publicOALParams)) {
                 await this.xcHub.addLeaf(
                     leafParams.issuer, 
-                    leafParams.v, 
-                    leafParams.r, 
-                    leafParams.s, 
-                    Object.keys(leafParams.zkp).map(k=>leafParams.zkp[k]), // Convert struct to ethers format
-                    leafParams.zkpInputs
+                    leafParams.signature.v,
+                    leafParams.signature.r,
+                    leafParams.signature.s,
+                    Object.keys(leafParams.proof.proof).map(k=>leafParams.proof.proof[k]), // Convert struct to ethers format
+                    leafParams.proof.inputs
                 )
             };
         });

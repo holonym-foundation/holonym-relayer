@@ -15,7 +15,7 @@ chai.use(chaiHTTP);
 
 const NETWORK_NAME = "hardhat"; //when testing, the network name is just hardhat not, e.g., arbitrum
 
-describe.only("Writing", function () {
+describe("Writing", function () {
     before(async function () {
         this.server = await app_;
         this.request = chai.request(this.server);
