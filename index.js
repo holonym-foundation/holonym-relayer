@@ -63,16 +63,16 @@ const init = async (networkNames) => {
 };
 
 
-const addLeaf = async (callParams) => {
-//  console.log("callParams", callParams)
-  const { issuer, v, r, s, zkp, zkpInputs } = callParams;
+const addLeaf = async (args) => {
+  const { issuer, signature, proof } = args; 
+  const { v, r, s } = ethers.utils.splitSignature(signature);
   const result = await xcontracts["Hub"].addLeaf(
     issuer, 
     v, 
     r, 
     s, 
-    Object.keys(zkp).map(k=>zkp[k]), // Convert struct to ethers format
-    zkpInputs
+    Object.keys(proof.proof).map(k=>proof.proof[k]), // Convert proof object to ethers format to be serialized into a Solidity struct
+    proof.inputs
   );
   return result;
 }
@@ -119,11 +119,10 @@ async function backupTree(tree, networkName) {
 }
 
 app.post('/addLeaf', async (req, res, next) => {
-  console.log('addLeaf called with args ', JSON.stringify(req.body.addLeafArgs));
+  console.log('addLeaf called with args ', JSON.stringify(req.body));
   try {
-    const txReceipt = await addLeaf(req.body.addLeafArgs);
+    const txReceipt = await addLeaf(req.body);
     // if addLeaf doesn't throw, we assume tx was successful
-    await postUserCredentials(req.body.credsToStore)
     res.status(200).json(txReceipt);
   } catch(e) {
     console.error(e);
