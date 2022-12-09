@@ -3,4 +3,5 @@ node_modules
 out.wtns
 tmp.proof.json
 tmp.witness
+backup-trees
 backup-tree.json

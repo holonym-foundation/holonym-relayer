@@ -1,6 +1,6 @@
 require('dotenv').config()
 const fsPromises = require('node:fs/promises');
-const { ethers } = require('ethers')
+const { ethers } = require('./utils/get-ethers.js');
 const express = require('express')
 const app = express()
 const cors = require('cors')
@@ -68,16 +68,16 @@ const init = async (networkNames) => {
 };
 
 
-const addLeaf = async (callParams) => {
-//  console.log("callParams", callParams)
-  const { issuer, v, r, s, zkp, zkpInputs } = callParams;
+const addLeaf = async (args) => {
+  const { issuer, signature, proof } = args; 
+  const { v, r, s } = ethers.utils.splitSignature(signature);
   const result = await xcontracts["Hub"].addLeaf(
     issuer, 
     v, 
     r, 
     s, 
-    Object.keys(zkp).map(k=>zkp[k]), // Convert struct to ethers format
-    zkpInputs
+    Object.keys(proof.proof).map(k=>proof.proof[k]), // Convert proof object to ethers format to be serialized into a Solidity struct
+    proof.inputs
   );
   return result;
 }
@@ -85,12 +85,6 @@ const addLeaf = async (callParams) => {
 const writeProof = async (proofContractName, networkName, callParams) => {
   
   const { proof, inputs } = callParams;
-  // console.log("contract", xcontracts[proofContractName].contracts[networkName])
-  // console.log("gitcode", await xcontracts[proofContractName].providers[networkName].getCode(xcontracts[proofContractName].contracts[networkName].address))
-  console.log(
-    Object.keys(proof).map(k=>proof[k]), // Convert struct to ethers format
-    inputs
-  )
   const result = await xcontracts[proofContractName].contracts[networkName].prove(
     Object.keys(proof).map(k=>proof[k]), // Convert struct to ethers format
     inputs
@@ -101,11 +95,10 @@ const writeProof = async (proofContractName, networkName, callParams) => {
 
 async function backupTree(tree, networkName) {
   try {
-    console.log("backing up merkle tree")
     await fsPromises.writeFile(`${backupTreePath}/${networkName}.json`, JSON.stringify(tree));
     leafCountAtLastBackup = tree.leaves.length;
   } catch (err) {
-    console.log(err)
+    console.error(err)
   }
 }
 
@@ -142,12 +135,11 @@ async function updateTree(network) {
 }
 
 app.post('/addLeaf', async (req, res, next) => {
-  console.log('addLeaf called with args ', JSON.stringify(req.body.addLeafArgs));
+  console.log('addLeaf called with args ', JSON.stringify(req.body));
   try {
-    const txReceipt = await addLeaf(req.body.addLeafArgs);
+    const txReceipt = await addLeaf(req.body);
     // if addLeaf doesn't throw, we assume tx was successful
     updateTree(req.params.network);
-    await postUserCredentials(req.body.credsToStore)
     res.status(200).json(txReceipt);
   } catch(e) {
     console.error(e);
@@ -183,8 +175,6 @@ app.get('/getTree/:network', async (req, res) => {
     return res.status(500).json({ error: "Merkle tree has not been initialized" });
   }
   let tree = trees[req.params.network];
-  console.log(xcontracts["Hub"])
-  console.log(xcontracts["Hub"].contracts[req.params.network])
 
   // Trigger tree update. Tree is updated asynchronously so that request can be served immediately
   updateTree(req.params.network);
