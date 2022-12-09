@@ -53,7 +53,6 @@ let addresses
 const init = async (networkNames) => {
   await initAddresses();
   addresses = getAddresses();
-  console.log("addresses are", addresses)
   for (const contractName of Object.keys(addresses)) {
     xcontracts[contractName] = await CreateXChainContract(contractName);
   }
@@ -81,10 +80,6 @@ const addLeaf = async (args) => {
 const writeProof = async (proofContractName, networkName, callParams) => {
   
   const { proof, inputs } = callParams;
-  // console.log("contract", xcontracts[proofContractName].contracts[networkName])
-  // console.log("gitcode", await xcontracts[proofContractName].providers[networkName].getCode(xcontracts[proofContractName].contracts[networkName].address))
-
-  console.log("Keys", Object.keys(xcontracts), proofContractName)
   const result = await xcontracts[proofContractName].contracts[networkName].prove(
     Object.keys(proof).map(k=>proof[k]), // Convert struct to ethers format
     inputs
