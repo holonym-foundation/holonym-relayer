@@ -31,9 +31,9 @@ describe.only("Writing", function () {
             encryptedCredentials: randomBytes(16).toString("hex"),
             encryptedSymmetricKey: randomBytes(16).toString("hex"),
         }
-        // Add a test leaf (zkpInputs[1] is new leaf that will be added to the Merkle tree)
-        const newLeaf = BigInt(testLeaves[0].publicOALParams.zkpInputs[1]).toString() 
-        await chai.request(this.server).post("/addLeaf").send({addLeafArgs: testLeaves[0].publicOALParams, credsToStore: fakeCredsToStore})
+        // Add a test leaf (proof.inputs[1] is new leaf that will be added to the Merkle tree)
+        const newLeaf = BigInt(testLeaves[0].publicOALParams.proof.inputs[1]).toString() 
+        await chai.request(this.server).post("/addLeaf").send(testLeaves[0].publicOALParams)
         const response = await chai.request(this.server).get("/getLeaves/hardhat");
         expect(response.body).to.deep.equal([newLeaf]);
         
