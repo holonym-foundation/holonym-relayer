@@ -120,20 +120,6 @@ async function updateTree(network) {
   }
 }
 
-/**
- * @param {object} credsToStore should contain three params each of type string 
- */
- async function postUserCredentials(credsToStore) {
-  const { sigDigest, encryptedCredentials, encryptedSymmetricKey } = credsToStore
-  const resp = await axios.post(`${idServerUrl}/credentials`, {
-    apiKey: process.env.ID_SERVER_API_KEY,
-    sigDigest: sigDigest,
-    encryptedCredentials: encryptedCredentials,
-    encryptedSymmetricKey: encryptedSymmetricKey
-  })
-  return resp.data
-}
-
 app.post('/addLeaf', async (req, res, next) => {
   console.log('addLeaf called with args ', JSON.stringify(req.body));
   try {
