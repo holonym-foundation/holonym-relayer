@@ -84,7 +84,7 @@ const writeProof = async (proofContractName, networkName, callParams) => {
   // console.log("contract", xcontracts[proofContractName].contracts[networkName])
   // console.log("gitcode", await xcontracts[proofContractName].providers[networkName].getCode(xcontracts[proofContractName].contracts[networkName].address))
 
-  // console.log("Keys", Object.keys(xcontracts), proofContractName)
+  console.log("Keys", Object.keys(xcontracts), proofContractName)
   const result = await xcontracts[proofContractName].contracts[networkName].prove(
     Object.keys(proof).map(k=>proof[k]), // Convert struct to ethers format
     inputs
@@ -95,11 +95,10 @@ const writeProof = async (proofContractName, networkName, callParams) => {
 
 async function backupTree(tree, networkName) {
   try {
-    console.log("backing up merkle tree")
     await fsPromises.writeFile(`${backupTreePath}/${networkName}.json`, JSON.stringify(tree));
     leafCountAtLastBackup = tree.leaves.length;
   } catch (err) {
-    console.log(err)
+    console.error(err)
   }
 }
 
@@ -162,14 +161,13 @@ app.get('/getTree/:network', async (req, res) => {
     return res.status(500).json({ error: "Merkle tree has not been initialized" });
   }
   let tree = trees[req.params.network];
-  console.log(xcontracts["Hub"])
-  console.log(xcontracts["Hub"].contracts[req.params.network])
   const currentLeaves = tree._nodes[0];
   const newLeaves = (
     await xcontracts["Hub"].contracts[req.params.network]
     .getLeavesFrom(currentLeaves.length)
   )
   .map(leaf => leaf.toString());
+
   for (const leaf of newLeaves) {
     tree.insert(leaf);
   }
