@@ -63,7 +63,7 @@ const init = async (networkNames) => {
 };
 
 
-const addLeaf = async (args) => {
+const mint = async (args) => {
   const { issuer, signature, proof } = args; 
   const { v, r, s } = ethers.utils.splitSignature(signature);
   const result = await xcontracts["Hub"].addLeaf(
@@ -111,11 +111,11 @@ async function backupTree(tree, networkName) {
   return resp.data
 }
 
-app.post('/addLeaf', async (req, res, next) => {
-  console.log('addLeaf called with args ', JSON.stringify(req.body));
+app.post('/mint', async (req, res, next) => {
+  console.log('mint called with args ', JSON.stringify(req.body));
   try {
-    const txReceipt = await addLeaf(req.body);
-    // if addLeaf doesn't throw, we assume tx was successful
+    const txReceipt = await mint(req.body);
+    // if mint doesn't throw, we assume tx was successful
     res.status(200).json(txReceipt);
   } catch(e) {
     console.error(e);
@@ -173,9 +173,9 @@ app.get('/getTree/:network', async (req, res) => {
   return res.status(200).json(tree);
 })
 
-app.get('/', (req, res) => {
-  res.send('For this endpoint, POST your addLeaf parameters to /addLeaf and it will submit an addLeaf() transaction to Hub')
-})
+// app.get('/', (req, res) => {
+//   res.send('For this endpoint, POST your mint parameters to /addLeaf and it will submit an addLeaf() transaction to Hub')
+// })
 
 
 function poseidonHashQuinary(input) {
