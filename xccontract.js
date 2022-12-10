@@ -1,10 +1,17 @@
 require("dotenv").config();
-const { ethers } = require("ethers");
-const abis = require("./constants/abis.json");
-const addresses = require("./constants/contract-addresses.json");
+const { ethers } = require("./utils/get-ethers.js");
+const abis = require("./constants/abis");
+let { getAddresses, initAddresses } = require("./utils/contract-addresses");
 
-const nets = process.env.MAINNET === "true" ? "mainnet" : "testnet";
-
+let addresses; 
+const nets = process.env.NETWORKS // "mainnet" or "testnet"
+// Safely create a cross-chain contract wrapper, after addresses have loaded
+async function CreateXChainContract(...args) {
+    await initAddresses();
+    addresses = getAddresses();
+    return new XChainContract(...args);
+}
+// if(nets === "hardhat" && !process.env.HARDHAT_TESTING) { console.error("WARNING: need to run with npx hardhat test") }
 // TODO : use DefaultProvider with backup providers, not just an AlchemyProvider
 
 class XChainContract {
@@ -21,7 +28,7 @@ class XChainContract {
         // Populate providers & signers
         for ( const networkName of Object.keys(this.addresses) ) {
             const address = this.addresses[networkName];
-            const provider = new ethers.providers.AlchemyProvider("optimism-goerli", process.env.ALCHEMY_APIKEY);
+            const provider = (process.env.HARDHAT_TESTING === "true") ? ethers.provider : new ethers.providers.AlchemyProvider(networkName, process.env.ALCHEMY_APIKEY);
             const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
             const contract = new ethers.Contract(address, this.abi, signer);
             this.providers[networkName] = provider;
@@ -33,7 +40,6 @@ class XChainContract {
         for ( const functionName of this.functionNames ) {
             this[functionName] = async (...args) => {
                 const responses = {};
-
                 for ( const networkName of Object.keys(this.contracts) ) {
                     const contract = this.contracts[networkName];
                     const result = await contract[functionName](...args);
@@ -48,4 +54,4 @@ class XChainContract {
 
 }
 
-module.exports = XChainContract;
+module.exports = CreateXChainContract;

@@ -1,0 +1,29 @@
+{
+  "scheme": "g16",
+  "curve": "bn128",
+  "proof": {
+    "a": [
+      "0x0a80fb0e19615fb37ad80d189dc2d78882ee3b6a897b324df5e90bde59e17dd0",
+      "0x1478c7229ffe51e9d6c0e2afbccdb414d317171a9271e25cfdd8301523f791f5"
+    ],
+    "b": [
+      [
+        "0x1361d4ca6844fd2ce56c084ca2907585a1df35ef7c0acc0b9ed8a48382064acf",
+        "0x13bd65ca7be99af49b203cccb88be015de977ee87fa843ca564b971f80bb6910"
+      ],
+      [
+        "0x19ad393a05c47a58c535683ace7c52a100358937123a4ff8b8222e50cd9b6bdc",
+        "0x13a73874d012055a60b4f5826e2acf9197f4f58cb95ce489c22793ea3b617d07"
+      ]
+    ],
+    "c": [
+      "0x0b386cba19767fa4db182a695bb8fe6b567a0b148b341035dd24608103e732aa",
+      "0x19890b82d8c46386b81ba48cca597961df7ea31e9175fb5c2a494decadc2e0d1"
+    ]
+  },
+  "inputs": [
+    "0x1852b8902885ac4dac9b70150a81d1d86ac658cc8887d949db1d9ee50a9ca9a0",
+    "0x1ecbe3250c32bfc3b37aec55b894de6a05aee15e133c789fe27818a710cf0ffd",
+    "0x000000000000000000000000c8834c1fcf0df6623fc8c8ed25064a4148d99388"
+  ]
+}

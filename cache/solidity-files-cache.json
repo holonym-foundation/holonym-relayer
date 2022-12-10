@@ -183,7 +183,7 @@
       ]
     },
     "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/Hub.sol": {
-      "lastModificationDate": 1669955587363,
+      "lastModificationDate": 1670388792778,
       "contentHash": "7b63f92df3aac97f3e39aca4e882d904",
       "sourceName": "contracts/Hub.sol",
       "solcConfig": {
@@ -224,7 +224,7 @@
       ]
     },
     "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/ProofRouter.sol": {
-      "lastModificationDate": 1669955587364,
+      "lastModificationDate": 1670388997527,
       "contentHash": "49dc91bc13070c5717061bc5ae62fd30",
       "sourceName": "contracts/ProofRouter.sol",
       "solcConfig": {
@@ -628,45 +628,6 @@
         "Math"
       ]
     },
-    "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/ResidencyStore.sol": {
-      "lastModificationDate": 1669955587364,
-      "contentHash": "1373b1a8a9d3b50464253e54aa75de50",
-      "sourceName": "contracts/ResidencyStore.sol",
-      "solcConfig": {
-        "version": "0.8.17",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "hardhat/console.sol",
-        "./Hub.sol",
-        "./PairingAndProof.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.9"
-      ],
-      "artifacts": [
-        "ResidencyStore"
-      ]
-    },
     "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/AssertLeafContainsCredsVerifier.sol": {
       "lastModificationDate": 1669955587362,
       "contentHash": "9f372c8e68c90cfe684a41bd27ec9068",
@@ -703,45 +664,6 @@
       ],
       "artifacts": [
         "AssertLeafContainsCredsVerifier"
-      ]
-    },
-    "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/AntiSybilStore.sol": {
-      "lastModificationDate": 1669955587360,
-      "contentHash": "7cf0e554639afb486c5b64758340e903",
-      "sourceName": "contracts/AntiSybilStore.sol",
-      "solcConfig": {
-        "version": "0.8.17",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [
-        "hardhat/console.sol",
-        "./Hub.sol",
-        "./PairingAndProof.sol"
-      ],
-      "versionPragmas": [
-        "^0.8.9"
-      ],
-      "artifacts": [
-        "AntiSybilStore"
       ]
     },
     "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/antiSybil.verifier.sol": {
@@ -856,8 +778,8 @@
       ]
     },
     "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/examples/SybilFreeAction.sol": {
-      "lastModificationDate": 1669955587365,
-      "contentHash": "515d40bae1ac93c3f14cd6005a9946dd",
+      "lastModificationDate": 1670199042763,
+      "contentHash": "80d4bbc563989f3c2d37255797f6a3d2",
       "sourceName": "contracts/examples/SybilFreeAction.sol",
       "solcConfig": {
         "version": "0.8.17",
@@ -883,7 +805,7 @@
         }
       },
       "imports": [
-        "../interfaces/IAntiSybilStore.sol"
+        "../interfaces/ISybilResistance.sol"
       ],
       "versionPragmas": [
         "^0.8.0"
@@ -892,44 +814,9 @@
         "SybilFreeAction"
       ]
     },
-    "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/interfaces/IAntiSybilStore.sol": {
-      "lastModificationDate": 1669955587366,
-      "contentHash": "c9960d25418ba3f88926eebc28d05acf",
-      "sourceName": "contracts/interfaces/IAntiSybilStore.sol",
-      "solcConfig": {
-        "version": "0.8.17",
-        "settings": {
-          "optimizer": {
-            "enabled": false,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.9"
-      ],
-      "artifacts": [
-        "IAntiSybilStore"
-      ]
-    },
     "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/examples/USResidency.sol": {
-      "lastModificationDate": 1669955587365,
-      "contentHash": "11f8313a3b40357d0b4828338d5895c8",
+      "lastModificationDate": 1670199042763,
+      "contentHash": "7c4a85a6318539877e3e992649fc7415",
       "sourceName": "contracts/examples/USResidency.sol",
       "solcConfig": {
         "version": "0.8.17",
@@ -955,7 +842,7 @@
         }
       },
       "imports": [
-        "../interfaces/IResidencyStore.sol"
+        "../interfaces/IIsUSResident.sol"
       ],
       "versionPragmas": [
         "^0.8.0"
@@ -964,10 +851,86 @@
         "USResidency"
       ]
     },
-    "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/interfaces/IResidencyStore.sol": {
-      "lastModificationDate": 1669955587366,
-      "contentHash": "7622c90df828a5d0338b13992b7d0e39",
-      "sourceName": "contracts/interfaces/IResidencyStore.sol",
+    "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/SybilResistance.sol": {
+      "lastModificationDate": 1670388669245,
+      "contentHash": "8b43c355591134721d09a2a45f28fb07",
+      "sourceName": "contracts/SybilResistance.sol",
+      "solcConfig": {
+        "version": "0.8.17",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./Hub.sol",
+        "./PairingAndProof.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.9"
+      ],
+      "artifacts": [
+        "SybilResistance"
+      ]
+    },
+    "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/IsUSResident.sol": {
+      "lastModificationDate": 1670199042760,
+      "contentHash": "bd8cbf1cd70f80fae9a4625aa12676ad",
+      "sourceName": "contracts/IsUSResident.sol",
+      "solcConfig": {
+        "version": "0.8.17",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [
+        "./Hub.sol",
+        "./PairingAndProof.sol"
+      ],
+      "versionPragmas": [
+        "^0.8.9"
+      ],
+      "artifacts": [
+        "IsUSResident"
+      ]
+    },
+    "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/interfaces/ISybilResistance.sol": {
+      "lastModificationDate": 1670199042769,
+      "contentHash": "1c6525db88b30b65416e4b52bc855e62",
+      "sourceName": "contracts/interfaces/ISybilResistance.sol",
       "solcConfig": {
         "version": "0.8.17",
         "settings": {
@@ -996,7 +959,42 @@
         "^0.8.9"
       ],
       "artifacts": [
-        "IResidencyStore"
+        "ISybilResistance"
+      ]
+    },
+    "/Users/nanaknihal/wtf-is-a-holonym/holonym-relayer/contracts/interfaces/IIsUSResident.sol": {
+      "lastModificationDate": 1670199042768,
+      "contentHash": "35044d39686b72de496db45ab880a46a",
+      "sourceName": "contracts/interfaces/IIsUSResident.sol",
+      "solcConfig": {
+        "version": "0.8.17",
+        "settings": {
+          "optimizer": {
+            "enabled": false,
+            "runs": 200
+          },
+          "outputSelection": {
+            "*": {
+              "*": [
+                "abi",
+                "evm.bytecode",
+                "evm.deployedBytecode",
+                "evm.methodIdentifiers",
+                "metadata"
+              ],
+              "": [
+                "ast"
+              ]
+            }
+          }
+        }
+      },
+      "imports": [],
+      "versionPragmas": [
+        "^0.8.9"
+      ],
+      "artifacts": [
+        "IIsUSResident"
       ]
     }
   }
