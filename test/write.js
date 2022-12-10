@@ -33,7 +33,7 @@ describe("Writing", function () {
         }
         // Add a test leaf (proof.inputs[1] is new leaf that will be added to the Merkle tree)
         const newLeaf = BigInt(testLeaves[0].publicOALParams.proof.inputs[1]).toString() 
-        await chai.request(this.server).post("/mint").send(testLeaves[0].publicOALParams)
+        await chai.request(this.server).post("/addLeaf").send(testLeaves[0].publicOALParams)
         const response = await chai.request(this.server).get("/getLeaves/hardhat");
         expect(response.body).to.deep.equal([newLeaf]);
         
