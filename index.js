@@ -152,7 +152,9 @@ app.post('/writeProof/:proofContractName/:network', async (req, res) => {
 
 
 app.get('/getLeaves/:network', async (req, res) => {
-  const leaves = await xcontracts["Hub"].contracts[req.params.network].getLeaves();
+  const contract = xcontracts["Hub"]?.contracts[req.params.network];
+  if (!contract) return res.send([]);
+  const leaves = await contract.getLeaves();
   res.send(leaves.map(leaf=>leaf.toString()));
 })
 
