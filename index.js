@@ -71,7 +71,7 @@ const init = async (networkNames) => {
 const addLeaf = async (args) => {
   const { issuer, signature, proof } = args; 
   const { v, r, s } = ethers.utils.splitSignature(signature);
-  const result = await xcontracts["Hub"].addLeaf(
+  const txs = await xcontracts["Hub"].addLeaf(
     issuer, 
     v, 
     r, 
@@ -79,17 +79,21 @@ const addLeaf = async (args) => {
     Object.keys(proof.proof).map(k=>proof.proof[k]), // Convert proof object to ethers format to be serialized into a Solidity struct
     proof.inputs
   );
-  return result;
+  for (const networkName of Object.keys(txs)) {
+    txs[networkName] = await txs[networkName].wait();
+  }
+  return txs;
 }
 
 const writeProof = async (proofContractName, networkName, callParams) => {
   
   const { proof, inputs } = callParams;
-  const result = await xcontracts[proofContractName].contracts[networkName].prove(
+  const tx = await xcontracts[proofContractName].contracts[networkName].prove(
     Object.keys(proof).map(k=>proof[k]), // Convert struct to ethers format
     inputs
   );
-  return result;
+  const txReceipt = await tx.wait();
+  return txReceipt;
 }
 
 
@@ -123,10 +127,10 @@ async function updateTree(network) {
 app.post('/addLeaf', async (req, res, next) => {
   console.log('addLeaf called with args ', JSON.stringify(req.body));
   try {
-    const txReceipt = await addLeaf(req.body);
+    const txReceipts = await addLeaf(req.body);
     // if addLeaf doesn't throw, we assume tx was successful
     updateTree(req.params.network);
-    res.status(200).json(txReceipt);
+    res.status(200).json(txReceipts);
   } catch(e) {
     console.error(e);
     res.status(400).send(e);
