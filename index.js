@@ -191,8 +191,8 @@ async function initTree(networkName) {
   if(networkName === "hardhat") { console.error("WARNING: not initializing hardhat tree from backup, as hardhat network's state is not persistent and this would load a deleted tree"); trees["hardhat"] = tree; return }
   if(!(networkName in xcontracts["Hub"].contracts)) return; // If it doesn't support the network, abort and return an empty Merkle Tree
 
-    console.log("Initializing in-memory merkle tree")
-    console.time("tree-initialization")
+    console.log("Initializing in-memory merkle tree for", networkName)
+    console.time(`tree-initialization-${networkName}`)
 
   // Initialize tree from backup. This step ensures that we can respond to getTree 
   // requests immediately after this Node.js process restarts. It might take hours to 
@@ -214,8 +214,8 @@ async function initTree(networkName) {
   }
 
   // treeHasBeenInitialized = true;
-  console.log("Merkle tree in memory has been initialized")
-  console.timeEnd("tree-initialization")
+  console.log("Merkle tree in memory has been initialized for", networkName)
+  console.timeEnd(`tree-initialization-${networkName}`)
   trees[networkName] = tree;
   await backupTree(tree, networkName);
 }
@@ -224,6 +224,6 @@ app.listen(port, () => {})
 
 module.exports.appPromise = new Promise(
   function(resolve, reject){
-    init(["hardhat", "optimism-goerli"]).then(resolve(app))
+    init(["hardhat", "optimism-goerli", "optimism"]).then(resolve(app))
   }
 ); // For testing app with Chai
