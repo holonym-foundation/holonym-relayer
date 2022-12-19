@@ -166,10 +166,13 @@ app.get('/getTree/:network', async (req, res) => {
   if (!(req.params.network in trees)) {
     return res.status(500).json({ error: "Merkle tree has not been initialized" });
   }
-  let tree = trees[req.params.network];
 
   // Trigger tree update. Tree is updated asynchronously so that request can be served immediately
   updateTree(req.params.network);
+
+  // Wait 400ms for tree updates (we aren't awaiting udpateTree because of the exclusive mutex; we don't want to wait forever if the queue for updating the tree is long)
+  await new Promise(resolve => setTimeout(resolve, 400));
+  let tree = trees[req.params.network];
 
   return res.status(200).json(tree);
 })
