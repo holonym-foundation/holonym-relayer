@@ -6,6 +6,7 @@ const app = express()
 const cors = require('cors')
 const axios = require('axios')
 const Mutex = require('async-mutex').Mutex;
+const tryAcquire = require('async-mutex').tryAcquire;
 const CreateXChainContract = require('./xccontract')
 const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
 const { poseidon } = require('circomlibjs-old');
@@ -108,7 +109,7 @@ async function backupTree(tree, networkName) {
 
 async function updateTree(network) {
   try {
-    await mutexes[network]?.runExclusive(async () => {
+    await tryAcquire(mutexes[network]).runExclusive(async () => {
       const contract = xcontracts["Hub"].contracts[network];
       const index = trees[network].leaves.length;
       const newLeaves = (await contract.getLeavesFrom(index)).map(leaf => leaf.toString());
