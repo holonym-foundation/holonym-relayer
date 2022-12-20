@@ -10,7 +10,7 @@ const tryAcquire = require('async-mutex').tryAcquire;
 const CreateXChainContract = require('./xccontract')
 const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
 const { poseidon } = require('circomlibjs-old');
-const { backupTreePath } = require('./constants/misc');
+const { backupTreePath, whitelistedIssuers } = require('./constants/misc');
 const { initAddresses, getAddresses } = require("./utils/contract-addresses");
 
 
@@ -121,16 +121,31 @@ async function updateTree(network) {
       }
     });
   } catch (err) {
-    console.log(err)
+    console.log('Error updating tree on network', network);
+    console.log(err);
   }
 }
 
 app.post('/addLeaf', async (req, res, next) => {
   console.log('addLeaf called with args ', JSON.stringify(req.body));
   try {
+    // Ensure leaf was signed by whitelisted issuer
+    const { issuer, signature, proof } = req.body;
+    if (!whitelistedIssuers.includes(issuer.toLowerCase())) {
+      return res.status(400).send("Issuer is not whitelisted");
+    }
+    const msg = ethers.utils.arrayify(proof.inputs[0]); // leaf
+    const leafSigner = ethers.utils.verifyMessage(msg, signature.compact)
+    if (leafSigner.toLowerCase() !== issuer.toLowerCase()) {
+      return res.status(400).send("Signature is not from issuer");
+    }
+
     const txReceipts = await addLeaf(req.body);
     // if addLeaf doesn't throw, we assume tx was successful
-    updateTree(req.params.network);
+    for (const networkName of Object.keys(trees)) {
+      await updateTree(networkName);
+    }
+
     res.status(200).json(txReceipts);
   } catch(e) {
     console.error(e);
@@ -227,7 +242,9 @@ async function initTree(networkName) {
 app.listen(port, () => {})
 
 module.exports.appPromise = new Promise(
-  function(resolve, reject){
-    init(["hardhat", "optimism-goerli", "optimism"]).then(resolve(app))
+  function(resolve, reject) {
+    const networks = ["optimism-goerli", "optimism"];
+    if (process.env.NODE_ENV === 'development') networks.push('hardhat')
+    init(networks).then(resolve(app))
   }
 ); // For testing app with Chai
