@@ -127,7 +127,8 @@ async function updateTree(network) {
 }
 
 app.post('/addLeaf', async (req, res, next) => {
-  console.log('addLeaf called with args ', JSON.stringify(req.body));
+  console.log(new Date().toISOString());
+  console.log('addLeaf called with args ', JSON.stringify(req.body, null, 2));
   try {
     // Ensure leaf was signed by whitelisted issuer
     const { issuer, signature, proof } = req.body;
