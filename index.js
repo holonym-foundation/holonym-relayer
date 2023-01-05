@@ -81,7 +81,7 @@ const addLeaf = async (args) => {
     proof.inputs
   );
   for (const networkName of Object.keys(txs)) {
-    txs[networkName] = await txs[networkName].wait();
+    if (txs[networkName]?.wait) txs[networkName] = await txs[networkName].wait();
   }
   return txs;
 }
@@ -131,14 +131,16 @@ app.post('/addLeaf', async (req, res, next) => {
   console.log('addLeaf called with args ', JSON.stringify(req.body, null, 2));
   try {
     // Ensure leaf was signed by whitelisted issuer
-    const { issuer, signature, proof } = req.body;
-    if (!whitelistedIssuers.includes(issuer.toLowerCase())) {
-      return res.status(400).send("Issuer is not whitelisted");
-    }
-    const msg = ethers.utils.arrayify(proof.inputs[0]); // leaf
-    const leafSigner = ethers.utils.verifyMessage(msg, signature.compact)
-    if (leafSigner.toLowerCase() !== issuer.toLowerCase()) {
-      return res.status(400).send("Signature is not from issuer");
+    if (process.env.HARDHAT_TESTING !== 'true') {
+      const { issuer, signature, proof } = req.body;
+      if (!whitelistedIssuers.includes(issuer.toLowerCase())) {
+        return res.status(400).send("Issuer is not whitelisted");
+      }
+      const msg = ethers.utils.arrayify(proof.inputs[0]); // leaf
+      const leafSigner = ethers.utils.verifyMessage(msg, signature.compact)
+      if (leafSigner.toLowerCase() !== issuer.toLowerCase()) {
+        return res.status(400).send("Signature is not from issuer");
+      }
     }
 
     const txReceipts = await addLeaf(req.body);

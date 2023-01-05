@@ -26,12 +26,27 @@ describe.only("Writing", function () {
 
 
     // This is intended to test the nonce race condition
-    it.only("addLeaf/ should not fail when it receives 4 valid short requests in very short period", async function() {
+    it("addLeaf/ should not fail when it receives 4 valid requests in very short period", async function() {
         const publicOALParams = testLeaves.map(leaf => leaf.publicOALParams)
         const responses = await Promise.all(publicOALParams.map(params => chai.request(this.server).post("/addLeaf").send(params)))
         for (const resp of responses) {
             expect(resp).to.have.status(200);
         }
+    });
+
+    // This is intended to test the nonce race condition. Specifically, it is testing that the nonce is not incremented if the transaction fails
+    it.only("addLeaf/ should not fail if it receives, at the same time, 1 valid request and 1 request whose tx reverts", async function() {
+        const validResp1 = await chai.request(this.server).post("/addLeaf").send(testLeaves[0].publicOALParams);
+        expect(validResp1).to.have.status(200);
+
+        // tx should fail for first request and succeed for second one
+        const responses = await Promise.all([
+            // Send the same leaf twice. Sending the same leaf twice is a way to test that the tx fails once it hits the network and not before
+            chai.request(this.server).post("/addLeaf").send(testLeaves[0].publicOALParams),
+            chai.request(this.server).post("/addLeaf").send(testLeaves[1].publicOALParams)
+        ])
+        expect(responses[0], "Invalid transaction succeeded but should have reverted").to.have.status(400);
+        expect(responses[1], "Valid transaction failed but should have succeeded").to.have.status(200);
     });
 
     it("Integration test: add some leaves and prove facts about them (integration test as two unit tests would take a while to run)", async function() {
