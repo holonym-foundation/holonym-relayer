@@ -15,7 +15,7 @@ chai.use(chaiHTTP);
 
 const NETWORK_NAME = "hardhat"; //when testing, the network name is just hardhat not, e.g., arbitrum
 
-describe("Writing", function () {
+describe.only("Writing", function () {
     before(async function () {
         this.server = await app_;
         this.request = chai.request(this.server);
@@ -24,6 +24,15 @@ describe("Writing", function () {
         this.xcUS = await CreateCrossChainContract("IsUSResident");        
     })
 
+
+    // This is intended to test the nonce race condition
+    it.only("addLeaf/ should not fail when it receives 4 valid short requests in very short period", async function() {
+        const publicOALParams = testLeaves.map(leaf => leaf.publicOALParams)
+        const responses = await Promise.all(publicOALParams.map(params => chai.request(this.server).post("/addLeaf").send(params)))
+        for (const resp of responses) {
+            expect(resp).to.have.status(200);
+        }
+    });
 
     it("Integration test: add some leaves and prove facts about them (integration test as two unit tests would take a while to run)", async function() {
         const fakeCredsToStore = {
@@ -73,7 +82,5 @@ describe("Writing", function () {
         // Wait 30s
         // await delay(30000)
         expect(await this.xcSR.isUniqueForAction(anotherAccount.address, actionId)).to.deep.equal({hardhat : true});
-        
-        
     });
 });

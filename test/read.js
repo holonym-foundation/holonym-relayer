@@ -30,7 +30,7 @@ describe("Smart contract reading", function () {
             })
         });
     });
-    describe.only("Non-empty sets", function() {
+    describe("Non-empty sets", function() {
         before(async function() {
             // Add 3 test leaves:
             for (const leafParams of testLeaves.slice(0,3).map(x=>x.publicOALParams)) {

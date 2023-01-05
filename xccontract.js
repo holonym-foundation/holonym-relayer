@@ -1,3 +1,4 @@
+const { NonceManager } = require("@ethersproject/experimental");
 require("dotenv").config();
 const { ethers } = require("./utils/get-ethers.js");
 const abis = require("./constants/abis");
@@ -23,6 +24,7 @@ class XChainContract {
         this.addresses = addresses[contractName][nets];
         this.providers = {};
         this.signers = {};
+        this.nonceManagers = {};
         this.contracts = {};
 
         // Populate providers & signers
@@ -30,9 +32,11 @@ class XChainContract {
             const address = this.addresses[networkName];
             const provider = (process.env.HARDHAT_TESTING === "true") ? ethers.provider : new ethers.providers.AlchemyProvider(networkName, process.env.ALCHEMY_APIKEY);
             const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-            const contract = new ethers.Contract(address, this.abi, signer);
+            const nonceManager = new NonceManager(signer);
+            const contract = new ethers.Contract(address, this.abi, nonceManager);
             this.providers[networkName] = provider;
             this.signers[networkName] = signer;
+            this.nonceManagers[networkName] = nonceManager;
             this.contracts[networkName] = contract;
         }
         
