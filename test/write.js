@@ -2,7 +2,7 @@ const util = require("util");
 const exec = util.promisify(require("child_process").exec);
 const chai = require("chai");
 const { expect } = chai;
-const CreateCrossChainContract = require("../xccontract");
+const { CreateXChainContract } = require('../xccontract')
 const testLeaves = require("./test-leaves.json");
 require("@nomiclabs/hardhat-ethers");
 const app_ = require("../index.js").appPromise;
@@ -19,9 +19,9 @@ describe.only("Writing", function () {
     before(async function () {
         this.server = await app_;
         this.request = chai.request(this.server);
-        this.xcHub = await CreateCrossChainContract("Hub");
-        this.xcSR = await CreateCrossChainContract("SybilResistance");
-        this.xcUS = await CreateCrossChainContract("IsUSResident");        
+        this.xcHub = await CreateXChainContract("Hub");
+        this.xcSR = await CreateXChainContract("SybilResistance");
+        this.xcUS = await CreateXChainContract("IsUSResident");        
     })
 
 

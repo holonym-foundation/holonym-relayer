@@ -1,5 +1,5 @@
 const assert = require("assert");
-const XChainContract = require("./xccontract");
+const { CreateXChainContract } = require('./xccontract')
 const addresses = require("./constants/contract-addresses.json");
 const { Tree } = require("holo-merkle-utils");
 
@@ -10,7 +10,7 @@ const DEPTH = 14;
 /* Keeps track of cross-chain Merkle tree state */
 class XChainState {
     constructor() {
-        this.xchub = new XChainContract("Hub");
+        this.xchub = new CreateXChainContract("Hub");
         this.xcleaves = {};  // Format: { "networkName" : ["leaf0", "leaf1", ..."leafn"] }
         this.xctrees = {}; // // Format: { "networkName" : MerkleTree }
         this.xchub.getLeaves().then(result => {

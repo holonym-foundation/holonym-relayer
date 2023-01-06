@@ -7,7 +7,7 @@ const cors = require('cors')
 const axios = require('axios')
 const Mutex = require('async-mutex').Mutex;
 const tryAcquire = require('async-mutex').tryAcquire;
-const CreateXChainContract = require('./xccontract')
+const { CreateXChainContract, callContractWithNonceManager } = require('./xccontract')
 const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
 const { poseidon } = require('circomlibjs-old');
 const { backupTreePath, whitelistedIssuers } = require('./constants/misc');
@@ -89,12 +89,19 @@ const addLeaf = async (args) => {
 const writeProof = async (proofContractName, networkName, callParams) => {
   
   const { proof, inputs } = callParams;
-  const tx = await xcontracts[proofContractName].contracts[networkName].prove(
-    Object.keys(proof).map(k=>proof[k]), // Convert struct to ethers format
-    inputs
-  );
-  const txReceipt = await tx.wait();
-  return txReceipt;
+  // const tx = await xcontracts[proofContractName].contracts[networkName].prove(
+  //   Object.keys(proof).map(k=>proof[k]), // Convert struct to ethers format
+  //   inputs
+  // );
+  const contract = xcontracts[proofContractName].contracts[networkName];
+  const nonceManager = xcontracts[proofContractName].nonceManagers[networkName];
+  const args = [
+      Object.keys(proof).map(k=>proof[k]), // Convert struct to ethers format
+      inputs
+  ]
+  const tx = await callContractWithNonceManager(contract, "prove", nonceManager, args);
+
+  if (tx?.wait) return await tx.wait();
 }
 
 

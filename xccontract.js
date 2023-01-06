@@ -87,4 +87,7 @@ class XChainContract {
     }
 }
 
-module.exports = CreateXChainContract;
+module.exports = {
+    CreateXChainContract: CreateXChainContract,
+    callContractWithNonceManager: callContractWithNonceManager
+};

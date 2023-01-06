@@ -1,7 +1,7 @@
 
 const chai = require("chai");
 const { expect } = chai;
-const CreateCrossChainContract = require("../xccontract");
+const { CreateXChainContract } = require('../xccontract')
 const testLeaves = require("./test-leaves.json");
 require("@nomiclabs/hardhat-ethers");
 const app_ = require("../index.js").appPromise;
@@ -14,7 +14,7 @@ describe("Smart contract reading", function () {
     before(async function () {
         this.server = await app_;
         this.request = chai.request(this.server);
-        this.xcHub = await CreateCrossChainContract("Hub");
+        this.xcHub = await CreateXChainContract("Hub");
         this.hhHub = this.xcHub.contracts["hardhat"];
     })
 
