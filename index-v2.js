@@ -7,7 +7,7 @@ const Mutex = require('async-mutex').Mutex;
 const { verifyProofCircom } = require('./utils/proofs');
 const { poseidonHashQuinary } = require('./utils/utils');
 const { insert } = require('./tree-insert');
-const { ddbClient, createTreeTableIfNotExists } = require('./dynamodb')
+const { MerkleTreeTableName, ddbClient, createTreeTableIfNotExists } = require('./dynamodb')
 
 const mutex = new Mutex();
 const tree = new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
@@ -26,7 +26,7 @@ async function initTreeV2() {
     // 14 is tree depth. 5 is tree arity. 14^5 is number of leaves.
     for (let index = 0; index < 14 ** 5; index++) {
       const data = await ddbClient.send(new GetItemCommand({
-        TableName: "MerkleTree",
+        TableName: MerkleTreeTableName,
         Key: {
           "NodeLocation": {
             S: `0-${index}`
@@ -50,7 +50,7 @@ async function initTreeV2() {
  */
 async function insertLeaf(leaf) {
   const txs = {};
-  for (const network of Object.keys(trees)) {
+  for (const network of Object.keys(xcontracts["Roots"].contracts)) {
     try {
       // The mutex here is crucial. Database updates are eventually consistent, so we need to ensure that
       // all updates to the tree are done in the correct order. Every leaf insertion must be atomic.

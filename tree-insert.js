@@ -1,7 +1,7 @@
 // Forked from https://github.com/privacy-scaling-explorations/zk-kit/blob/main/packages/incremental-merkle-tree/src/insert.ts
 
 const { PutItemCommand } = require("@aws-sdk/client-dynamodb");
-const { ddbClient } = require("./dynamodb.js");
+const { MerkleTreeTableName, ddbClient } = require("./dynamodb.js");
 
 function checkParameter(value, name, ...types) {
   if (value === undefined) {
@@ -57,7 +57,7 @@ module.exports.insert = async (leaf, depth, arity, nodes, zeroes, hash, backupIn
     // Our addition: Store the node in the database
     if (backupInDb) {
       await ddbClient.send(new PutItemCommand({
-        TableName: 'MerkleTree',
+        TableName: MerkleTreeTableName,
         Item: {
           'NodeLocation': {
             S:`${level}-${index}`

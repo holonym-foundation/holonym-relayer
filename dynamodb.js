@@ -1,5 +1,7 @@
 const { DynamoDBClient, CreateTableCommand } = require("@aws-sdk/client-dynamodb");
 
+const MerkleTreeTableName = process.env.NODE_ENV == "development" ? "MerkleTree-dev" : "MerkleTree";
+
 const ddbClient = new DynamoDBClient({ 
   credentials: {
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -36,7 +38,7 @@ const createTreeTableIfNotExists = async () => {
         ReadCapacityUnits: 1,
         WriteCapacityUnits: 1,
       },
-      TableName: "MerkleTree",
+      TableName: MerkleTreeTableName,
       StreamSpecification: {
         StreamEnabled: false,
       },
@@ -54,6 +56,7 @@ const createTreeTableIfNotExists = async () => {
 };
 
 module.exports = {
+  MerkleTreeTableName,
   ddbClient,
   createTreeTableIfNotExists,
 };
