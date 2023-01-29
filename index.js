@@ -12,7 +12,8 @@ const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
 const { poseidon } = require('circomlibjs-old');
 const { backupTreePath, whitelistedIssuers } = require('./constants/misc');
 const { initAddresses, getAddresses } = require("./utils/contract-addresses");
-
+const { poseidonHashQuinary } = require('./utils/utils');
+const { addLeafEndpointV2, initTreeV2 } = require('./index-v2');
 
 const corsOpts = {
   origin: ["https://holonym.io", "https://holonym.id","https://app.holonym.io","https://app.holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
@@ -45,7 +46,6 @@ const port = process.env.PORT || 3000;
 
 let xcontracts = {}
 
-const idServerUrl = process.env.NODE_ENV === "development" ? "http://127.0.0.1:3000" : "https://id-server.holonym.io";
 
 // mutexes are used to prevent race conditions from occuring during tree updates
 const mutexes = {};
@@ -164,6 +164,9 @@ app.post('/addLeaf', async (req, res, next) => {
   }
 })
 
+// v2
+app.post('/v2/addLeaf', addLeafEndpointV2)
+
 // proofContractName: "IsUSResident" or "SybilResistance"
 // network: "optimism-goerli", "hardhat", ...
 // writeProofArgs
@@ -208,14 +211,6 @@ app.get('/', (req, res) => {
   res.send('For this endpoint, POST your addLeaf parameters to /addLeaf and it will submit an addLeaf() transaction to Hub')
 })
 
-
-function poseidonHashQuinary(input) {
-  if (input.length !== 5 || !Array.isArray(input)) {
-    throw new Error("input must be an array of length 5");
-  }
-  return poseidon(input.map((x) => ethers.BigNumber.from(x).toString())).toString();
-}
-
 async function initTree(networkName) {
   let tree = new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
   if(networkName === "hardhat") { console.error("WARNING: not initializing hardhat tree from backup, as hardhat network's state is not persistent and this would load a deleted tree"); trees["hardhat"] = tree; return }
@@ -256,6 +251,8 @@ module.exports.appPromise = new Promise(
   function(resolve, reject) {
     const networks = ["optimism-goerli", "optimism"];
     if (process.env.NODE_ENV === 'development') networks.push('hardhat')
-    init(networks).then(resolve(app))
+    init(networks)
+    .then(initTreeV2)
+    .then(resolve(app))
   }
 ); // For testing app with Chai

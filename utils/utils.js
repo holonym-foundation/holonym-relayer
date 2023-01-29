@@ -70,5 +70,13 @@ function convertMerkleProofFormat(proof, hash) {
     return args;
 }
 
+function poseidonHashQuinary(input) {
+  if (input.length !== 5 || !Array.isArray(input)) {
+    throw new Error("input must be an array of length 5");
+  }
+  return poseidon(input.map((x) => ethers.BigNumber.from(x).toString())).toString();
+}
+
 exports.deployPoseidon = deployPoseidon;
 exports.createMerkleProof = createMerkleProof;
+exports.poseidonHashQuinary = poseidonHashQuinary;
