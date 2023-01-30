@@ -315,7 +315,6 @@ async function insertLeaf(leaf) {
   return txs;
 }
 
-// v2
 app.post('/v2/addLeaf', async (req, res) => {
   console.log(new Date().toISOString());
   console.log('v2 addLeaf called with args ', JSON.stringify(req.body, null, 2));
@@ -337,9 +336,17 @@ app.post('/v2/addLeaf', async (req, res) => {
   }
 })
 
+app.get('/v2/getLeaves/', async (req, res) => {
+  res.send(tree.leaves);
+})
+
+app.get('/v2/getTree/', async (req, res) => {
+  res.status(200).json(tree);
+})
+
 app.get('/leafExists/:leaf', async (req, res) => {
   const leaf = req.params.leaf;
-  const exists = tree._nodes[0].includes(leaf);
+  const exists = tree.leaves.includes(leaf);
   res.status(200).json({ exists });
 });
 
