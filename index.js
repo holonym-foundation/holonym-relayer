@@ -287,10 +287,8 @@ async function initTreeV2() {
 async function insertLeaf(leaf) {
   if (!treeV2HasBeenInitialized) throw new Error("Tree has not been initialized yet");
   const txs = {};
-  // The mutex here is crucial. Database updates are eventually consistent, so we need to ensure that
-  // all updates to the tree are done in the correct order. Every leaf insertion must be atomic.
-  // Without the mutex, two insertions might happen at the same time, and the second insertion
-  // might use outdated leaves.
+  // The mutex here is crucial. Without it, there is no way to guarantee that node updates are
+  // happening in the correct order.
   await tryAcquire(mutex).runExclusive(async () => {
     // Add the leaf to the database. We update the database first so that if an error occurs during,
     // the request, neither the tree in the database nor the tree in memory is updated. All errors 
