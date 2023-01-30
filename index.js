@@ -343,14 +343,23 @@ app.post('/v2/addLeaf', async (req, res) => {
 })
 
 app.get('/v2/getLeaves/', async (req, res) => {
+  if (!treeV2HasBeenInitialized) {
+    return res.status(500).json({ error: "Tree has not been initialized yet" });
+  }
   res.send(tree.leaves);
 })
 
 app.get('/v2/getTree/', async (req, res) => {
+  if (!treeV2HasBeenInitialized) {
+    return res.status(500).json({ error: "Tree has not been initialized yet" });
+  }
   res.status(200).json(tree);
 })
 
 app.get('/leafExists/:leaf', async (req, res) => {
+  if (!treeV2HasBeenInitialized) {
+    return res.status(500).json({ error: "Tree has not been initialized yet" });
+  }
   const leaf = req.params.leaf;
   const exists = tree.leaves.includes(leaf);
   res.status(200).json({ exists });
