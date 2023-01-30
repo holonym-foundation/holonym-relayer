@@ -250,6 +250,7 @@ async function initTree(networkName) {
 
 const mutex = new Mutex();
 const tree = new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
+let treeV2HasBeenInitialized = false;
 
 async function initTreeV2() {
   console.log("Initializing in-memory merkle tree for v2")
@@ -271,6 +272,7 @@ async function initTreeV2() {
       const leaf = data.Item?.LeafValue?.S;
       if (!leaf) break;
       tree.insert(leaf);
+      treeV2HasBeenInitialized = true;
     }
   } catch (err) {
     console.error("initTreeV2: ", err);
@@ -283,41 +285,41 @@ async function initTreeV2() {
  * Insert the leaf into the cached tree and the tree in the database, and update the on-chain roots.
  */
 async function insertLeaf(leaf) {
+  if (!treeV2HasBeenInitialized) throw new Error("Tree has not been initialized yet");
   const txs = {};
-  for (const network of Object.keys(xcontracts["Roots"].contracts)) {
-    try {
-      // The mutex here is crucial. Database updates are eventually consistent, so we need to ensure that
-      // all updates to the tree are done in the correct order. Every leaf insertion must be atomic.
-      // Without the mutex, two insertions might happen at the same time, and the second insertion
-      // might use outdated leaves.
-      await tryAcquire(mutex).runExclusive(async () => {
-        // Update local tree object
-        tree.insert(leaf);
+  // The mutex here is crucial. Database updates are eventually consistent, so we need to ensure that
+  // all updates to the tree are done in the correct order. Every leaf insertion must be atomic.
+  // Without the mutex, two insertions might happen at the same time, and the second insertion
+  // might use outdated leaves.
+  await tryAcquire(mutex).runExclusive(async () => {
+    // Add the leaf to the database. We update the database first so that if an error occurs during,
+    // the request, neither the tree in the database nor the tree in memory is updated. All errors 
+    // are bubbled to the caller of this function.
+    await ddbClient.send(new PutItemCommand({
+      TableName: LeavesTableName,
+      Item: {
+        'LeafIndex': {
+          N: (tree.leaves.length - 1).toString()
+        },
+        'LeafValue': {
+          S: leaf
+        }
+      }
+    }));
+    console.log(`Added leaf ${leaf} to database`)
 
-        // Add the leaf to the database
-        await ddbClient.send(new PutItemCommand({
-          TableName: LeavesTableName,
-          Item: {
-            'LeafIndex': {
-              N: (tree.leaves.length - 1).toString()
-            },
-            'LeafValue': {
-              S: leaf
-            }
-          }
-        }));
-        console.log(`Added leaf ${leaf} to database`)
-        // Update on-chain root
-        const root = tree.root;
-        const tx = await xcontracts["Roots"].contracts[network].addRoot(root);
-        if (tx?.wait) await tx.wait();
-        txs[network] = tx;
-      });
-    } catch (err) {
-      console.log('Error updating tree on network', network);
-      console.log(err);
+    // Update local tree object
+    tree.insert(leaf);
+
+    // Update on-chain roots
+    for (const network of Object.keys(xcontracts["Roots"].contracts)) {
+      const root = tree.root;
+      const tx = await xcontracts["Roots"].contracts[network].addRoot(root);
+      if (tx?.wait) await tx.wait();
+      txs[network] = tx;
     }
-  }
+  });
+  
   return txs;
 }
 
