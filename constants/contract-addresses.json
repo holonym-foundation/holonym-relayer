@@ -23,6 +23,11 @@
             "optimism-goerli" : "0xBA8a4C5c1f36Dc802d51FEEfF3aa4ef97Dae4B10"
         }
 
+    },
+    "Roots" : {
+        "testnet" : {
+            "optimism-goerli": "0xa76C96acf9b95cC988d634F1fF52C9a2eF7a9371"
+        }
     }
        
 }
