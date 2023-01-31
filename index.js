@@ -376,7 +376,7 @@ app.get('/v2/getTree/', async (req, res) => {
   res.status(200).json(tree);
 })
 
-app.get('/leafExists/:leaf', async (req, res) => {
+app.get('/v2/leafExists/:leaf', async (req, res) => {
   if (!treeV2HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
   }
