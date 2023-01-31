@@ -1,6 +1,6 @@
 require('dotenv').config()
 const fsPromises = require('node:fs/promises');
-const { GetItemCommand, PutItemCommand } = require("@aws-sdk/client-dynamodb");
+const { GetItemCommand, QueryCommand, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 const { ethers } = require('./utils/get-ethers.js');
 const express = require('express')
 const app = express()
@@ -284,7 +284,7 @@ async function initTreeV2() {
 /**
  * Insert the leaf into the cached tree and the tree in the database, and update the on-chain roots.
  */
-async function insertLeaf(leaf) {
+async function insertLeaf(newLeaf, signedLeaf) {
   if (!treeV2HasBeenInitialized) throw new Error("Tree has not been initialized yet");
   const txs = {};
   // The mutex here is crucial. Without it, there is no way to guarantee that node updates are
@@ -300,14 +300,17 @@ async function insertLeaf(leaf) {
           N: tree.leaves.length.toString()
         },
         'LeafValue': {
-          S: leaf
+          S: newLeaf
+        },
+        "SignedLeaf": {
+          S: signedLeaf
         }
       }
     }));
-    console.log(`Added leaf ${leaf} to database at index ${tree.leaves.length - 1}`)
+    console.log(`Added leaf ${newLeaf} to database at index ${tree.leaves.length}`)
 
     // Update local tree object
-    tree.insert(leaf);
+    tree.insert(newLeaf);
 
     // Update on-chain roots
     for (const network of Object.keys(xcontracts["Roots"].contracts)) {
@@ -322,17 +325,34 @@ async function insertLeaf(leaf) {
 }
 
 app.post('/v2/addLeaf', async (req, res) => {
-  console.log(new Date().toISOString());
-  console.log('v2 addLeaf called with args ', JSON.stringify(req.body, null, 2));
+  if (process.env.HARDHAT_TESTING !== 'true') {
+    console.log(new Date().toISOString());
+    console.log('v2 addLeaf called with args ', JSON.stringify(req.body, null, 2));
+  }
   try {
+    const signedLeaf = req.body?.publicSignals?.[0];
+    const newLeaf = req.body?.publicSignals?.[1];
+    if (!signedLeaf || !newLeaf) throw new Error('Leaf not found');
+
+    // Check that the new leaf was not created with a signed leaf that has already been used
+    const data = await ddbClient.send(new QueryCommand({
+      TableName: LeavesTableName,
+      IndexName: "SignedLeavesIndex",
+      KeyConditionExpression: "SignedLeaf = :signedLeaf",
+      ExpressionAttributeValues: {
+        ":signedLeaf": {
+          S: signedLeaf
+        }
+      }
+    }));
+    if (data.Items.length > 0) throw new Error('Cannot create more than one new leaf from a single signed leaf');
+
     // Verify onAddLeaf proof
     const result = verifyProofCircom('onAddLeaf', req.body);
     if (!result) throw new Error('Invalid proof');
 
     // Update tree in memory and database, and update on-chain roots
-    const newLeaf = req.body?.publicSignals?.[1];
-    if (!newLeaf) throw new Error('Leaf not found');
-    const txs = await insertLeaf(newLeaf);
+    const txs = await insertLeaf(newLeaf, signedLeaf);
 
     res.status(200).json(txs);
   } catch(e) {

@@ -18,9 +18,15 @@ const createLeavesTableIfNotExists = async () => {
     const params = {
       AttributeDefinitions: [
         {
+          // position of leaf in the array of leaves
           AttributeName: "LeafIndex",
           AttributeType: "N",
         },
+        {
+          // The signed leaf used in the onAddLeaf proof used to add the leaf
+          AttributeName: "SignedLeaf",
+          AttributeType: "S",
+        }
       ],
       KeySchema: [
         {
@@ -33,6 +39,24 @@ const createLeavesTableIfNotExists = async () => {
         WriteCapacityUnits: 1,
       },
       TableName: LeavesTableName,
+      GlobalSecondaryIndexes: [
+        {
+          IndexName: "SignedLeavesIndex",
+          KeySchema: [
+            {
+              AttributeName: "SignedLeaf",
+              KeyType: "HASH",
+            },
+          ],
+          Projection: {
+            ProjectionType: "ALL",
+          },
+          ProvisionedThroughput: {
+            ReadCapacityUnits: 1,
+            WriteCapacityUnits: 1,
+          },
+        }
+      ],
       StreamSpecification: {
         StreamEnabled: false,
       },
@@ -44,7 +68,7 @@ const createLeavesTableIfNotExists = async () => {
     if (err.name === "ResourceInUseException") {
       console.log("Leaves table already exists in DynamoDB");
     } else {
-      console.log("Error", err);
+      console.error("Error", err);
     }
   }
 };
