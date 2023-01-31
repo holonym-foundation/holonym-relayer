@@ -297,14 +297,14 @@ async function insertLeaf(leaf) {
       TableName: LeavesTableName,
       Item: {
         'LeafIndex': {
-          N: (tree.leaves.length - 1).toString()
+          N: tree.leaves.length.toString()
         },
         'LeafValue': {
           S: leaf
         }
       }
     }));
-    console.log(`Added leaf ${leaf} to database`)
+    console.log(`Added leaf ${leaf} to database at index ${tree.leaves.length - 1}`)
 
     // Update local tree object
     tree.insert(leaf);
