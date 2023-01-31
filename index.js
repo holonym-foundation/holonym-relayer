@@ -272,11 +272,11 @@ async function initTreeV2() {
       const leaf = data.Item?.LeafValue?.S;
       if (!leaf) break;
       tree.insert(leaf);
-      treeV2HasBeenInitialized = true;
     }
   } catch (err) {
     console.error("initTreeV2: ", err);
   }
+  treeV2HasBeenInitialized = true;
   console.log("Merkle tree in memory has been initialized for v2")
   console.timeEnd(`tree-initialization-v2`)
 }
