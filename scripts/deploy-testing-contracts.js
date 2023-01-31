@@ -103,12 +103,18 @@ async function deployTestingContracts(addresses) {
 
     const sr2 = ANTISYBIL2_ADDRESS ? await srFactory.attach(ANTISYBIL2_ADDRESS) : await (srFactory).deploy(hub.address, "0x8281316ac1d51c94f2de77575301cef615adea84"); //Change this address!
     await sr2.deployed();
+
+    const rootsFactory = await ethers.getContractFactory("Roots");
+    const roots = await rootsFactory.deploy();
+    await roots.deployed();
+    console.log('Roots address is', roots.address)
   
     const result = {
       "Hub" : {"mainnet" : {"hardhat" : hub.address}, "testnet" : {"hardhat" : hub.address}}, 
       "IsUSResident" : {"mainnet" : {"hardhat" : iur.address}, "testnet" : {"hardhat" : iur.address}}, 
       "SybilResistance" : {"mainnet" : {"hardhat" : sr.address}, "testnet" : {"hardhat" : sr.address}}, 
       "SybilResistance2" : {"mainnet" : {"hardhat" : sr2.address}, "testnet" : {"hardhat" : sr2.address}}, 
+      "Roots": {"mainnet": {"hardhat": roots.address}, "testnet": {"hardhat": roots.address}},
     }
 
     return result
