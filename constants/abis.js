@@ -27,8 +27,8 @@ const theABIs = {
     "event Uniqueness(address,uint256)",
     "function isUniqueForAction(address,uint256) view returns (bool)",
     "function masalaWasUsed(uint256) view returns (bool)",
-    "function proofIsValid(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[]) view returns (bool)",
-    "function prove(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[])"
+    "function proofIsValid(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[5]) view returns (bool)",
+    "function prove(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[5])"
   ],
   IsUSResident : [
     "constructor(address,address)",
@@ -42,8 +42,8 @@ const theABIs = {
     "constructor(address,uint,uint,address)",
     "event USResidency(address,bool)",
     "function masalaWasUsed(uint256) view returns (bool)",
-    "function proofIsValid(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[]) view returns (bool)",
-    "function prove(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[])",
+    "function proofIsValid(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[6]) view returns (bool)",
+    "function prove(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[6])",
     "function usResidency(address) view returns (bool)"
   ],
   Roots : [
