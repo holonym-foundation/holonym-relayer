@@ -22,8 +22,24 @@ const theABIs = {
   ],
   SybilResistance : sybilResistanceABI,
   SybilResistance2 : sybilResistanceABI,
+  SybilResistanceV2: [
+    "constructor(address,uint,uint,address)",
+    "event Uniqueness(address,uint256)",
+    "function isUniqueForAction(address,uint256) view returns (bool)",
+    "function masalaWasUsed(uint256) view returns (bool)",
+    "function proofIsValid(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[]) view returns (bool)",
+    "function prove(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[])"
+  ],
   IsUSResident : [
     "constructor(address,address)",
+    "event USResidency(address,bool)",
+    "function masalaWasUsed(uint256) view returns (bool)",
+    "function proofIsValid(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[]) view returns (bool)",
+    "function prove(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[])",
+    "function usResidency(address) view returns (bool)"
+  ],
+  IsUSResidentV2 : [
+    "constructor(address,uint,uint,address)",
     "event USResidency(address,bool)",
     "function masalaWasUsed(uint256) view returns (bool)",
     "function proofIsValid(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[]) view returns (bool)",
@@ -34,6 +50,6 @@ const theABIs = {
     "function addRoot(uint256)",
     "function mostRecentRoot() view returns (uint256)",
     "function rootIsRecent(uint256) view returns (bool)",
-  ]   
+  ]
 };
 module.exports = theABIs;

@@ -24,9 +24,20 @@
         }
 
     },
+
     "Roots" : {
         "testnet" : {
             "optimism-goerli": "0xa76C96acf9b95cC988d634F1fF52C9a2eF7a9371"
+        }
+    },
+    "IsUSResidentV2": {
+        "testnet": {
+            "optimism-goerli": "0xa6e547FD04C2457Fc37354A9e751aAE4d63949cC"
+        }
+    },
+    "SybilResistanceV2": {
+        "testnet": {
+            "optimism-goerli": "0x2A817705E2c42Ae320f84AE5F799fdd7044e6B41"
         }
     }
        
