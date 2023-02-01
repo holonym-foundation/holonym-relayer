@@ -103,7 +103,13 @@ const writeProof = async (proofContractName, networkName, callParams) => {
   ]
   const tx = await callContractWithNonceManager(contract, "prove", nonceManager, args);
 
-  if (tx?.wait) return await tx.wait();
+  const result = {...tx};
+  if (tx?.wait) {
+    const txReceipt = await tx.wait();
+    result.blockNumber = txReceipt.blockNumber;
+    result.transactionHash = txReceipt.transactionHash;
+  }
+  return result;
 }
 
 
