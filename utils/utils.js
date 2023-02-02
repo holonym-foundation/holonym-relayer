@@ -4,6 +4,7 @@ const bytecodePoseidon = poseidonContract.createCode(5);
 const { poseidon } = require("circomlibjs-old");
 const { ethers } = require("hardhat");
 const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
+const sgMail = require("@sendgrid/mail");
 
 const deployPoseidon = async () => {
     const [account] = await ethers.getSigners();
@@ -77,6 +78,27 @@ function poseidonHashQuinary(input) {
   return poseidon(input.map((x) => ethers.BigNumber.from(x).toString())).toString();
 }
 
+async function sendEmail(to, subject, text, html) {
+  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+  const msg = {
+    to, // "test@example.com"
+    from: "idservices@holonym.id",
+    subject,
+    text,
+    html,
+  };
+  try {
+    await sgMail.send(msg);
+  } catch (error) {
+    if (error.response) {
+      console.error(error.response.body);
+    } else {
+      console.error(error);
+    }
+  }
+}
+
 exports.deployPoseidon = deployPoseidon;
 exports.createMerkleProof = createMerkleProof;
 exports.poseidonHashQuinary = poseidonHashQuinary;
+exports.sendEmail = sendEmail;

@@ -1,6 +1,5 @@
 require('dotenv').config()
 const fsPromises = require('node:fs/promises');
-const { GetItemCommand, QueryCommand, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 const { ethers } = require('./utils/get-ethers.js');
 const express = require('express')
 const app = express()
@@ -15,7 +14,7 @@ const { backupTreePath, whitelistedIssuers } = require('./constants/misc');
 const { initAddresses, getAddresses } = require("./utils/contract-addresses");
 const { poseidonHashQuinary } = require('./utils/utils');
 const { verifyProofCircom } = require('./utils/proofs');
-const { LeavesTableName, ddbClient, createLeavesTableIfNotExists } = require('./dynamodb')
+const dynamodb = require('./dynamodb');
 
 const corsOpts = {
   origin: ["https://holonym.io", "https://holonym.id","https://app.holonym.io","https://app.holonym.id","http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
@@ -263,18 +262,12 @@ async function initTreeV2() {
   console.time(`tree-initialization-v2`)
   // Initialize tree from DynamoDB backup
   try {
-    await createLeavesTableIfNotExists();
+    await dynamodb.createLeavesTableIfNotExists();
     // level is level in tree (where 0 is level of leaves). 
     // 14 is tree depth. 5 is tree arity. 14^5 is number of leaves.
     for (let index = 0; index < 14 ** 5; index++) {
-      const data = await ddbClient.send(new GetItemCommand({
-        TableName: LeavesTableName,
-        Key: {
-          "LeafIndex": {
-            N: index.toString()
-          }
-        }
-      }));
+      if (process.env.NODE_ENV === 'development') await new Promise(r => setTimeout(r, 200));
+      const data = await dynamodb.getLeafAtIndex(index);
       const leaf = data.Item?.LeafValue?.S;
       if (!leaf) break;
       tree.insert(leaf);
@@ -299,21 +292,7 @@ async function insertLeaf(newLeaf, signedLeaf) {
     // Add the leaf to the database. We update the database first so that if an error occurs during,
     // the request, neither the tree in the database nor the tree in memory is updated. All errors 
     // are bubbled to the caller of this function.
-    await ddbClient.send(new PutItemCommand({
-      TableName: LeavesTableName,
-      Item: {
-        'LeafIndex': {
-          N: tree.leaves.length.toString()
-        },
-        'LeafValue': {
-          S: newLeaf
-        },
-        "SignedLeaf": {
-          S: signedLeaf
-        }
-      }
-    }));
-    console.log(`Added leaf ${newLeaf} to database at index ${tree.leaves.length}`)
+    await dynamodb.putLeaf(newLeaf, signedLeaf, tree.leaves.length);
 
     // Update local tree object
     tree.insert(newLeaf);
@@ -338,20 +317,11 @@ app.post('/v2/addLeaf', async (req, res) => {
   try {
     const signedLeaf = req.body?.publicSignals?.[0];
     const newLeaf = req.body?.publicSignals?.[1];
-    if (!signedLeaf || !newLeaf) throw new Error('Leaf not found');
+    if (!signedLeaf || !newLeaf) throw new Error('Leaf not found in request body');
 
     // Check that the new leaf was not created with a signed leaf that has already been used
-    const data = await ddbClient.send(new QueryCommand({
-      TableName: LeavesTableName,
-      IndexName: "SignedLeavesIndex",
-      KeyConditionExpression: "SignedLeaf = :signedLeaf",
-      ExpressionAttributeValues: {
-        ":signedLeaf": {
-          S: signedLeaf
-        }
-      }
-    }));
-    if (data.Items.length > 0) throw new Error('Cannot create more than one new leaf from a single signed leaf');
+    const data = await dynamodb.getLeavesBySignedLeaf(signedLeaf)
+    if (data?.Items.length > 0) throw new Error('Cannot create more than one new leaf from a single signed leaf');
 
     // Verify onAddLeaf proof
     const result = verifyProofCircom('onAddLeaf', req.body);
