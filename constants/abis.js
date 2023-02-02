@@ -44,7 +44,9 @@ const theABIs = {
     "function masalaWasUsed(uint256) view returns (bool)",
     "function proofIsValid(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[6]) view returns (bool)",
     "function prove(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[6])",
-    "function usResidency(address) view returns (bool)"
+    "function usResidency(address) view returns (bool)",
+    "function isValidIssuer(uint256) public view returns (bool)",
+    "function allowIssuers(uint256[]) public",
   ],
   Roots : [
     "function addRoot(uint256)",
