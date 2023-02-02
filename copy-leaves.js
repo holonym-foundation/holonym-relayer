@@ -6,7 +6,7 @@
 const { ethers } = require("ethers");
 require('dotenv').config();
 const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
-const { GetItemCommand, QueryCommand, PutItemCommand } = require("@aws-sdk/client-dynamodb");
+const { GetItemCommand, PutItemCommand } = require("@aws-sdk/client-dynamodb");
 const ABIs = require('./constants/abis');
 const addresses = require('./constants/contract-addresses.json');
 const { ddbClient } = require('./dynamodb');
@@ -16,7 +16,8 @@ async function main() {
   console.log('Getting on-chain leaves')
   // Get current on-chain leaves
   const provider = new ethers.providers.AlchemyProvider('optimism', process.env.ALCHEMY_APIKEY);
-  const hubContract = new ethers.Contract(addresses.Hub.mainnet.optimism, ABIs.Hub, provider);
+  const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+  const hubContract = new ethers.Contract(addresses.Hub.mainnet['optimism'], ABIs.Hub, provider);
   const onChainLeaves = await hubContract.getLeaves();
 
   // Get current off-chain leaves
@@ -67,6 +68,15 @@ async function main() {
     }));
     index++;
   }
+
+  // Update on-chain Merkle root
+  console.log('Updating on-chain Merkle root')
+  const tree = new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
+  for (const leaf of leaves.concat(leavesToCopy)) {
+    tree.insert(leaf);
+  }
+  const rootsContract = new ethers.Contract(addresses.Roots.mainnet['optimism'], ABIs.Roots, wallet);
+  await rootsContract.addRoot(tree.root);
 }
 
 main().then(() => console.log('done'))
