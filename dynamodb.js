@@ -63,10 +63,10 @@ const createLeavesTableIfNotExists = async () => {
     };
     // CreateTableCommand throws if table already exists.
     const data = await ddbClient.send(new CreateTableCommand(params));
-    console.log("Leaves table created in DynamoDB", data);
+    console.log(`${LeavesTableName} table created in DynamoDB`, data);
   } catch (err) {
     if (err.name === "ResourceInUseException") {
-      console.log("Leaves table already exists in DynamoDB");
+      console.log(`${LeavesTableName} table already exists in DynamoDB`);
     } else {
       console.error("Error", err);
     }
