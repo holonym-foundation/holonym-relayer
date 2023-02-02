@@ -32,12 +32,12 @@
     },
     "IsUSResidentV2": {
         "testnet": {
-            "optimism-goerli": "0xa6e547FD04C2457Fc37354A9e751aAE4d63949cC"
+            "optimism-goerli": "0xDDDe70439c4C147BF630c8e63aFE5119B630cf64"
         }
     },
     "SybilResistanceV2": {
         "testnet": {
-            "optimism-goerli": "0x2A817705E2c42Ae320f84AE5F799fdd7044e6B41"
+            "optimism-goerli": "0x990e6E35432290b3729B659c9ff9748e97F55785"
         }
     }
        
