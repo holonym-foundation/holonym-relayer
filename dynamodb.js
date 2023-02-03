@@ -114,6 +114,9 @@ async function putLeaf(newLeaf, signedLeaf, leafIndex) {
         },
         "SignedLeaf": {
           S: signedLeaf
+        },
+        "Timestamp": {
+          N: Date.now().toString()
         }
       }
     }));
