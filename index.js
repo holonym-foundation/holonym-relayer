@@ -7,6 +7,7 @@ const cors = require('cors')
 const axios = require('axios')
 const Mutex = require('async-mutex').Mutex;
 const tryAcquire = require('async-mutex').tryAcquire;
+const withTimeout = require('async-mutex').withTimeout;
 const { CreateXChainContract, callContractWithNonceManager } = require('./xccontract')
 const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
 const { poseidon } = require('circomlibjs-old');
@@ -253,7 +254,7 @@ async function initTree(networkName) {
 // START v2 stuff
 // --------------------------------------------------
 
-const mutex = new Mutex();
+const mutexWithTimeout = withTimeout(new Mutex(), 10000);
 const tree = new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
 let treeV2HasBeenInitialized = false;
 
@@ -288,7 +289,7 @@ async function insertLeaf(newLeaf, signedLeaf) {
   const txs = {};
   // The mutex here is crucial. Without it, there is no way to guarantee that node updates are
   // happening in the correct order.
-  await tryAcquire(mutex).runExclusive(async () => {
+  await mutexWithTimeout.runExclusive(async () => {
     // Add the leaf to the database. We update the database first so that if an error occurs during,
     // the request, neither the tree in the database nor the tree in memory is updated. All errors 
     // are bubbled to the caller of this function.
@@ -300,7 +301,9 @@ async function insertLeaf(newLeaf, signedLeaf) {
     // Update on-chain roots
     for (const network of Object.keys(xcontracts["Roots"].contracts)) {
       const root = tree.root;
-      const tx = await xcontracts["Roots"].contracts[network].addRoot(root);
+      const contract = xcontracts["Roots"].contracts[network];
+      const nonceManager = xcontracts["Roots"].nonceManagers[network];
+      const tx = await callContractWithNonceManager(contract, "addRoot", nonceManager, [root]);
       if (tx?.wait) await tx.wait();
       txs[network] = tx;
     }
