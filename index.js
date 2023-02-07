@@ -177,7 +177,7 @@ app.post('/addLeaf', async (req, res, next) => {
 // writeProofArgs
 app.post('/writeProof/:proofContractName/:network', async (req, res) => {
   console.log(new Date().toISOString());
-  console.log('writeProof called with args ', JSON.stringify(req.body.writeProofArgs, null, 2));
+  console.log('writeProof endpoint called with args ', JSON.stringify(req.body, null, 2));
   try {
     const txReceipt = await writeProof(req.params.proofContractName, req.params.network, req.body.writeProofArgs);
     res.status(200).json(txReceipt);
