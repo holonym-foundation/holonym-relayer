@@ -177,7 +177,7 @@ app.post('/addLeaf', async (req, res, next) => {
 // writeProofArgs
 app.post('/writeProof/:proofContractName/:network', async (req, res) => {
   console.log(new Date().toISOString());
-  console.log('writeProof endpoint called with args ', JSON.stringify(req.body, null, 2));
+  console.log(`writeProof/${req.params.proofContractName}/${req.params.network} endpoint called with args `, JSON.stringify(req.body, null, 2));
   try {
     const txReceipt = await writeProof(req.params.proofContractName, req.params.network, req.body.writeProofArgs);
     res.status(200).json(txReceipt);
@@ -368,7 +368,9 @@ app.get('/v2/leafExists/:leaf', async (req, res) => {
 // END v2 stuff
 // --------------------------------------------------
 
-app.listen(port, () => {})
+app.listen(port, () => {
+  console.log('Started server on port', port);
+})
 
 module.exports.appPromise = new Promise(
   function(resolve, reject) {
