@@ -18,7 +18,7 @@ const { verifyProofCircom } = require('./utils/proofs');
 const dynamodb = require('./dynamodb');
 
 const corsOpts = {
-  origin: ["https://holonym.io", "https://holonym.id","https://app.holonym.io","https://app.holonym.id", "https://staging.holonym.io", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
+  origin: ["https://holonym.io", "https://holonym.id","https://app.holonym.io","https://app.holonym.id", "https://staging.holonym.io", "https://metrics.holonym-internal.net", "http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:8080", "http://localhost:8081"],
   optionsSuccessStatus: 200 // For legacy browser support
 }
 
