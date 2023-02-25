@@ -48,6 +48,16 @@ const theABIs = {
     "function isValidIssuer(uint256) public view returns (bool)",
     "function allowIssuers(uint256[]) public",
   ],
+  MedicalSpecialty: [
+    "constructor(address,uint,uint)",
+    "event UserHasMedicalSpecialty(address,uint256)",
+    "function hashbrownsWasUsed(uint256) view returns (bool)",
+    "function proofIsValid(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[6]) view returns (bool)",
+    "function prove(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[6])",
+    "function specialty(address) view returns (uint256)",
+    "function isValidIssuer(uint256) public view returns (bool)",
+    "function allowIssuers(uint256[]) public",
+  ],
   Roots : [
     "function addRoot(uint256)",
     "function mostRecentRoot() view returns (uint256)",

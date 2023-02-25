@@ -48,6 +48,11 @@
         "testnet": {
             "optimism-goerli": "0x990e6E35432290b3729B659c9ff9748e97F55785"
         }
+    },
+    "MedicalSpecialty": {
+        "testnet": {
+            "optimism-goerli": "0xAaed6Fe89B5d096a2712102350b457AE60c506b1"
+        }
     }
        
 }
