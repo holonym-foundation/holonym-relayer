@@ -62,6 +62,7 @@ const theABIs = {
     "function addRoot(uint256)",
     "function mostRecentRoot() view returns (uint256)",
     "function rootIsRecent(uint256) view returns (bool)",
+    "function transferOwnership(address) public virtual",
   ]
 };
 module.exports = theABIs;
