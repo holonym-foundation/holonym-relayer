@@ -373,8 +373,7 @@ app.get('/v2/rootIsRecent/:root', async (req, res) => {
   let isRecent = false;
   for (const network of Object.keys(xcontracts["Roots"].contracts)) {
     const contract = xcontracts["Roots"].contracts[network];
-    const nonceManager = xcontracts["Roots"].nonceManagers[network];
-    isRecent = await callContractWithNonceManager(contract, "rootIsRecent", nonceManager, [root]);
+    isRecent = await contract.rootIsRecent(root);
     if (isRecent) break;
   }
 
