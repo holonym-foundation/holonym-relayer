@@ -364,6 +364,23 @@ app.get('/v2/leafExists/:leaf', async (req, res) => {
   res.status(200).json({ exists });
 });
 
+app.get('/v2/rootIsRecent/:root', async (req, res) => {
+  if (!treeV2HasBeenInitialized) {
+    return res.status(500).json({ error: "Tree has not been initialized yet" });
+  }
+  const root = req.params.root;
+  
+  let isRecent = false;
+  for (const network of Object.keys(xcontracts["Roots"].contracts)) {
+    const contract = xcontracts["Roots"].contracts[network];
+    const nonceManager = xcontracts["Roots"].nonceManagers[network];
+    isRecent = await callContractWithNonceManager(contract, "rootIsRecent", nonceManager, [root]);
+    if (isRecent) break;
+  }
+
+  res.status(200).json({ isRecent });
+});
+
 // --------------------------------------------------
 // END v2 stuff
 // --------------------------------------------------
