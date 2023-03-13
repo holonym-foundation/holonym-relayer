@@ -30,6 +30,12 @@ const theABIs = {
     "function proofIsValid(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[5]) view returns (bool)",
     "function prove(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[5])"
   ],
+  SybilResistancePhone: [
+    "constructor(address,uint,uint, address)",
+    "event Uniqueness(address,uint256)",
+    "function isUniqueForAction(address,uint256) view returns (bool)",
+    "function prove(tuple(tuple(uint256,uint256),tuple(uint256[2],uint256[2]),tuple(uint256,uint256)),uint256[5])"
+  ],
   IsUSResident : [
     "constructor(address,address)",
     "event USResidency(address,bool)",
