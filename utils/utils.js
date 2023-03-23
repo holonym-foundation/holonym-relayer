@@ -1,20 +1,8 @@
-const { poseidonContract } = require("circomlibjs");
-const abiPoseidon = poseidonContract.generateABI(5);
-const bytecodePoseidon = poseidonContract.createCode(5);
 const { poseidon } = require("circomlibjs-old");
 const { ethers } = require("hardhat");
 const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
 const sgMail = require("@sendgrid/mail");
 
-const deployPoseidon = async () => {
-    const [account] = await ethers.getSigners();
-    const PoseidonContractFactory = new ethers.ContractFactory(
-        abiPoseidon,
-        bytecodePoseidon,
-        account
-    );
-    return await PoseidonContractFactory.deploy();
-}
 
 /* creates a Merkle proof in the appropriate JSON format -- leaf is the leaf to make a proof for, and treeData is the data returned from the relayer's /getTree endpoint*/
 async function createMerkleProof(leaf, treeData) {
@@ -98,7 +86,6 @@ async function sendEmail(to, subject, text, html) {
   }
 }
 
-exports.deployPoseidon = deployPoseidon;
 exports.createMerkleProof = createMerkleProof;
 exports.poseidonHashQuinary = poseidonHashQuinary;
 exports.sendEmail = sendEmail;
