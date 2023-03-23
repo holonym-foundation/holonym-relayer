@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
+    "start": "bash scripts/run.sh",
     "test": "HARDHAT_TESTING=true npx hardhat test"
   },
   "author": "",
