@@ -44,37 +44,37 @@ jobs:
           push: true
           tags: holonym/holonym-relayer:latest
   # Deploy to Amazon ECS
-  # aws-deploy:
-  #   name: Deploy to AWS
-  #   needs: docker-build-push
-  #   runs-on: ubuntu-latest
+  aws-deploy:
+    name: Deploy to AWS
+    needs: docker-build-push
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-  #     - name: Configure AWS credentials
-  #       uses: aws-actions/configure-aws-credentials@v1
-  #       with:
-  #         role-to-assume: ${{ env.IAM_ROLE }}
-  #         aws-region: ${{ env.AWS_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ env.IAM_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
 
-  #     - name: Download ECS task definition
-  #       run: |
-  #         aws ecs describe-task-definition --task-definition $TASK_DEF_NAME --query taskDefinition > task-definition.json
+      - name: Download ECS task definition
+        run: |
+          aws ecs describe-task-definition --task-definition $TASK_DEF_NAME --query taskDefinition > task-definition.json
 
-  #     - name: Fill in the new image ID in the Amazon ECS task definition
-  #       id: task-def
-  #       uses: aws-actions/amazon-ecs-render-task-definition@v1
-  #       with:
-  #         task-definition: task-definition.json
-  #         container-name: ${{ env.CONTAINER_NAME }}
-  #         image: ${{ env.IMAGE_NAME }}
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ env.IMAGE_NAME }}
 
-  #     - name: Deploy Amazon ECS task definition
-  #       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-  #       with:
-  #         task-definition: ${{ steps.task-def.outputs.task-definition }}
-  #         service: ${{ env.ECS_SERVICE }}
-  #         cluster: ${{ env.ECS_CLUSTER }}
-  #         wait-for-service-stability: true
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
