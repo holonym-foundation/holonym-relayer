@@ -1,5 +1,5 @@
 const { poseidon } = require("circomlibjs-old");
-const { ethers } = require("hardhat");
+const { ethers } = require("ethers");
 const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
 const sgMail = require("@sendgrid/mail");
 
