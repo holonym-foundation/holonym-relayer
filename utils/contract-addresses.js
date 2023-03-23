@@ -1,4 +1,7 @@
-const { deployTestingContracts } = require("../scripts/deploy-testing-contracts.js");
+const { deployTestingContracts } = 
+    process.env.HARDHAT_TESTING === "true" 
+        ? require("../scripts/deploy-testing-contracts.js")
+        : { deployTestingContracts : () => {} };
 
 let addresses;
 let addressesLoading;
