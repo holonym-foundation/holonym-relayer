@@ -254,7 +254,7 @@ async function initTree(networkName) {
 // START v2 stuff
 // --------------------------------------------------
 
-const mutexWithTimeout = withTimeout(new Mutex(), 2 * 60 * 1000);
+const mutexWithTimeout = withTimeout(new Mutex(), 30 * 1000);
 const tree = new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
 let treeV2HasBeenInitialized = false;
 
