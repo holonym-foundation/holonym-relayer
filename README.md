@@ -2,7 +2,7 @@
 
 First, install Node.js 16. We recommend using [nvm](https://github.com/nvm-sh/nvm) to manage your Node.js versions.
 
-Clone the repo:
+Clone the repo.
 
 ```bash
 git clone https://github.com/holonym-foundation/holonym-relayer.git
@@ -14,7 +14,13 @@ Install dependencies with npm.
 npm install
 ```
 
-Run the development server:
+Set environment variables. You might need to get in touch with the team to get the values of some of these variables.
+
+```bash
+cp .env.example .env
+```
+
+Run the development server.
 
 ```bash
 npm run dev
