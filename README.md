@@ -1,28 +1,24 @@
+## Setup
 
-# How to use relayer
-`RELAYER_URL` is https://relayer.holonym.id
+First, install Node.js 16. We recommend using [nvm](https://github.com/nvm-sh/nvm) to manage your Node.js versions.
 
-`issuer` is the address of the credential issuer
+Clone the repo:
 
-`v`, `r`, and `s` constitute the issuer's ECDSA signature of the old leaf
-
-`zkp` is the ZoKrates-generated JSON object of the proof. However, it's just the proof object of a, b, and c without public inputs.
-
-`zkpInputs` are the inputs part of the of the ZoKrates-generated proof
-
-```
-const axios = require("axios");
-const res = await axios.post(`${RELAYER_URL}/addLeaf`, {
-            addLeafArgs: {
-                issuer : ISSUER_ADDRESS, 
-                v : SIGV, 
-                r : SIGR, 
-                s : SIGS, 
-                zkp : ZKP, 
-                zkpInputs : ZKPINPUTS
-            }
-            });
+```bash
+git clone https://github.com/holonym-foundation/holonym-relayer.git
 ```
 
-# Testing
+Install dependencies with npm.
+
+```bash
+npm install
+```
+
+Run the development server:
+
+```bash
+npm run dev
+```
+
+## Testing
 A local hardhat environment is used for testing. All of the smart contracts in contracts/ are used here solely for testing purposes. Call `npm run test` to test
