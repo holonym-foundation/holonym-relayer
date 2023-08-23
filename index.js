@@ -8,6 +8,7 @@ const axios = require('axios')
 const Mutex = require('async-mutex').Mutex;
 const tryAcquire = require('async-mutex').tryAcquire;
 const withTimeout = require('async-mutex').withTimeout;
+const { cloneDeep } = require('lodash')
 const { CreateXChainContract, callContractWithNonceManager } = require('./xccontract')
 const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
 const { poseidon } = require('circomlibjs-old');
@@ -384,6 +385,208 @@ app.get('/v2/rootIsRecent/:root', async (req, res) => {
 // END v2 stuff
 // --------------------------------------------------
 
+// --------------------------------------------------
+// START v3 stuff
+// 
+// v2 and v3 share the same Leaves table in DynamoDB but
+// use different in-memory Merkle trees.
+// --------------------------------------------------
+
+const addLeafMutexV3 = withTimeout(new Mutex(), 30 * 1000);
+// softFinalizedTreeV3 includes all the added leaves but its root is not in the 
+// recentRoots mapping on chain
+let softFinalizedTreeV3 = new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
+// finalizedTreeV3 does not include all the added leaves but its root is in the 
+// recentRoots mapping on chain
+let finalizedTreeV3 = new IncrementalMerkleTree(poseidonHashQuinary, 14, "0", 5);
+// rootAtLastBackupV3 allows us to ensure that we only write the tree to the backup
+// file if the tree as changed since the last backup. This in turn allows us to
+// avoid unnecessary write costs.
+let rootAtLastBackupV3 = '';
+let treeV3HasBeenInitialized = false;
+
+async function initTreeV3FromBackupFile() {
+  try {
+    const backupTreeStr = await fsPromises.readFile(`${backupTreePath}/tree.json`, 'utf8');
+    const backupTree = JSON.parse(backupTreeStr);
+    softFinalizedTreeV3._nodes = backupTree._nodes;
+    softFinalizedTreeV3._root = backupTree._root;
+    softFinalizedTreeV3._zeroes = backupTree._zeroes;
+    finalizedTreeV3._nodes = backupTree._nodes;
+    finalizedTreeV3._root = backupTree._root;
+    finalizedTreeV3._zeroes = backupTree._zeroes;
+    return true
+  } catch (err) {
+    console.error("initTreeV3 error:", err);
+    return false
+  }
+}
+
+async function initTreeV3FromDatabase() {
+  // level is level in tree (where 0 is level of leaves). 
+  // 14 is tree depth. 5 is tree arity. 14^5 is number of leaves.
+  for (let index = 0; index < 14 ** 5; index++) {
+    if (process.env.NODE_ENV === 'development') await new Promise(r => setTimeout(r, 200));
+    const data = await dynamodb.getLeafAtIndex(index);
+    const leaf = data.Item?.LeafValue?.S;
+    if (!leaf) break;
+    softFinalizedTreeV3.insert(leaf);
+    finalizedTreeV3.insert(leaf);
+  }
+}
+
+async function initTreeV3() {
+  console.log("Initializing in-memory merkle tree for v3")
+  console.time(`tree-initialization-v3`)
+  // Initialize tree from DynamoDB backup
+  try {
+    await dynamodb.createLeavesTableIfNotExists();
+
+    const initializedFromBackup = await initTreeV3FromBackupFile();
+    if (!initializedFromBackup) {
+      await initTreeV3FromDatabase()
+    }
+  } catch (err) {
+    console.error("initTreeV3: ", err);
+  }
+  treeV3HasBeenInitialized = true;
+  console.log("Merkle tree in memory has been initialized for v3")
+  console.timeEnd(`tree-initialization-v3`)
+}
+
+/**
+ * Insert the leaf into the cached tree and the tree in the database, and update the on-chain roots.
+ */
+async function insertLeafV3(newLeaf, signedLeaf) {
+  if (!treeV3HasBeenInitialized) throw new Error("Tree has not been initialized yet");
+  // The mutex here is crucial. Without it, there is no way to guarantee that node updates are
+  // happening in the correct order.
+  await addLeafMutexV3.runExclusive(async () => {
+    // Add the leaf to the database. We update the database first so that if an error occurs during
+    // the request, neither the tree in the database nor the tree in memory is updated. All errors 
+    // are bubbled to the caller of this function.
+    await dynamodb.putLeaf(newLeaf, signedLeaf, softFinalizedTreeV3.leaves.length);
+
+    // Update local tree object
+    softFinalizedTreeV3.insert(newLeaf);
+  });
+}
+
+app.post('/v3/addLeaf', async (req, res) => {
+  if (process.env.HARDHAT_TESTING !== 'true') {
+    console.log(new Date().toISOString());
+    console.log('v3 addLeaf called with args ', JSON.stringify(req.body, null, 2));
+  }
+  try {
+    const signedLeaf = req.body?.publicSignals?.[0];
+    const newLeaf = req.body?.publicSignals?.[1];
+    if (!signedLeaf || !newLeaf) throw new Error('Leaf not found in request body');
+
+    // Check that the new leaf was not created with a signed leaf that has already been used
+    const data = await dynamodb.getLeavesBySignedLeaf(signedLeaf)
+    if (data?.Items.length > 0) throw new Error('Cannot create more than one new leaf from a single signed leaf');
+
+    // Verify onAddLeaf proof
+    const result = verifyProofCircom('onAddLeaf', req.body);
+    if (!result) throw new Error('Invalid proof');
+
+    // Update tree in memory and database
+    await insertLeafV3(newLeaf, signedLeaf);
+
+    res.status(200).json({ success: true });
+  } catch(e) {
+    console.error(e);
+    res.status(400).send(e);
+  }
+})
+
+/**
+ * /finalize-pending-tree sets the finalized tree to the soft finalized tree, writes the soft 
+ * finalized tree to a file, and updates the on-chain root to reflect the new finalized tree.
+ */
+app.post('/v3/finalize-pending-tree', async (req, res) => {
+  try {
+    // Only allow requests with the admin API key
+    if (req.headers['x-api-key'] !== process.env.ADMIN_API_KEY) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    if (!treeV3HasBeenInitialized) throw new Error("Tree has not been initialized yet");
+
+    // TODO: CT: Question: Is it possible for softFinalizedTreeV3 to be in the process
+    // of updating (due to a call to /v3/addLeaf) at the same time that this cloneDeep
+    // call is executing? If so, we should use a mutex or something to prevent this case.
+    const finalizedTree = cloneDeep(softFinalizedTreeV3)
+    
+    try {
+      if (finalizedTree.root !== rootAtLastBackupV3) {
+        await fsPromises.writeFile(
+          `${backupTreePath}/tree.json`, 
+          JSON.stringify(finalizedTree)
+        );
+        rootAtLastBackupV3 = finalizedTree.root;
+      }
+    } catch (err) {
+      console.error(err)
+      return res.status(500).json({ error: "Failed to write tree to file" });
+    }
+
+    const rootOnNetworkIsRecent = {};
+    for (const network of Object.keys(xcontracts["Roots"].contracts)) {
+      const contract = xcontracts["Roots"].contracts[network];
+      isRecent = await contract.rootIsRecent(finalizedTree.root);
+      rootOnNetworkIsRecent[network] = isRecent;
+    }
+
+    // Update on-chain roots if root is not recent
+    const txs = {};
+    const networksWithOutdatedRoots = Object.keys(rootOnNetworkIsRecent).filter(
+      (network) => !rootOnNetworkIsRecent[network]
+    )
+    for (const network of networksWithOutdatedRoots) {
+      const contract = xcontracts["Roots"].contracts[network];
+      const nonceManager = xcontracts["Roots"].nonceManagers[network];
+      const tx = await callContractWithNonceManager(contract, "addRoot", nonceManager, [finalizedTree.root]);
+      if (tx?.wait) await tx.wait();
+      txs[network] = tx;
+    }
+
+    finalizedTreeV3 = finalizedTree
+
+    return res.status(200).json({ success: true, txs });
+  } catch (err) {
+    console.error(err);
+    res.status(400).send(err)
+  }
+})
+
+app.get('/v3/getLeaves/', async (req, res) => {
+  if (!treeV3HasBeenInitialized) {
+    return res.status(500).json({ error: "Tree has not been initialized yet" });
+  }
+  res.send(finalizedTreeV3.leaves);
+})
+
+app.get('/v3/getTree/', async (req, res) => {
+  if (!treeV3HasBeenInitialized) {
+    return res.status(500).json({ error: "Tree has not been initialized yet" });
+  }
+  res.status(200).json(finalizedTreeV3);
+})
+
+app.get('/v3/leafExists/:leaf', async (req, res) => {
+  if (!treeV3HasBeenInitialized) {
+    return res.status(500).json({ error: "Tree has not been initialized yet" });
+  }
+  const leaf = req.params.leaf;
+  const exists = finalizedTreeV3.leaves.includes(leaf);
+  res.status(200).json({ exists });
+})
+
+// --------------------------------------------------
+// END v3 stuff
+// --------------------------------------------------
+
 app.listen(port, () => {
   console.log('Started server on port', port);
 })
@@ -394,6 +597,7 @@ module.exports.appPromise = new Promise(
     if (process.env.NODE_ENV === 'development') networks.push('hardhat')
     init(networks)
     .then(initTreeV2)
+    .then(initTreeV3)
     .then(resolve(app))
   }
 ); // For testing app with Chai
