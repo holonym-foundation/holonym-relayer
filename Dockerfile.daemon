@@ -1,0 +1,34 @@
+# FROM rustlang/rust:nightly as build
+# RUN user=root cargo new --bin daemon
+# WORKDIR /app
+
+# COPY ./daemon/Cargo.lock ./Cargo.lock
+# COPY ./daemon/Cargo.toml ./Cargo.toml
+
+# # RUN rm ./daemon/src/*.rs
+# COPY ./daemon/src ./src
+
+# RUN cargo build --release
+# # RUN cargo build
+
+# FROM alpine
+# COPY --from=build /app/target/release/server .
+# # COPY --from=build /app/target/debug/server .
+
+# CMD ["./daemon"]
+
+
+
+FROM rustlang/rust:nightly as builder
+
+WORKDIR /usr/src/daemon
+
+COPY ./daemon .
+
+RUN cargo install --path .
+
+FROM debian:bullseye-slim
+RUN apt-get update && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /usr/local/cargo/bin/daemon /usr/local/bin/daemon
+
+CMD ["daemon"]

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "bash scripts/run.sh",
+    "start": "docker compose --file ./docker-compose.yml up --build --abort-on-container-exit",
     "dev": "node index.js",
     "test": "HARDHAT_TESTING=true npx hardhat test"
   },

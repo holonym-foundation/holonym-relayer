@@ -1,0 +1,40 @@
+version: '3'
+
+services:
+  relayer-server:
+    container_name: relayer-server
+    build:
+      context: .
+      dockerfile: ./Dockerfile.relayer
+    volumes:
+      - .:/relayer-server-volume
+    # ports:
+    #   - '8545:8545'
+    # expose:
+    #   - '8545'
+    network_mode: host
+    env_file:
+      - .env
+    # healthcheck:
+    #   # Assume healthy
+    #   test: ["CMD-SHELL", "echo 'healthy'"]
+    #   interval: 3s
+    #   timeout: 5s
+    #   retries: 3
+  relayer-daemon:
+    container_name: relayer-daemon
+    build:
+      context: .
+      dockerfile: ./Dockerfile.daemon
+    # ports:
+    #   - '127.0.0.1:3000:3000'
+    # expose:
+    #   - '3000'
+    network_mode: host
+    env_file:
+      - ./daemon/.env
+    # healthcheck:
+    #   test: ["CMD-SHELL", "curl --fail http://localhost:3000/ || exit 1"]
+    #   interval: 3s
+    #   timeout: 5s
+    #   retries: 3
