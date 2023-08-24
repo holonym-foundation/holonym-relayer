@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "docker compose --file ./docker-compose.yml up --build --abort-on-container-exit",
-    "dev": "node index.js",
+    "dev-server": "node index.js",
+    "dev-daemon": "cargo run --manifest-path=./daemon/Cargo.toml",
     "test": "HARDHAT_TESTING=true npx hardhat test"
   },
   "author": "",

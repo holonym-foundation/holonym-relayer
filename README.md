@@ -1,6 +1,6 @@
 ## Setup
 
-First, install Node.js 16. We recommend using [nvm](https://github.com/nvm-sh/nvm) to manage your Node.js versions.
+First, install Node.js 16 and Rust. We recommend using [nvm](https://github.com/nvm-sh/nvm) to manage your Node.js versions.
 
 Clone the repo.
 
@@ -23,7 +23,13 @@ cp .env.example .env
 Run the development server.
 
 ```bash
-npm run dev
+npm run dev-server
+```
+
+In another terminal, run the daemon.
+
+```bash
+npm run dev-daemon
 ```
 
 ## Testing
