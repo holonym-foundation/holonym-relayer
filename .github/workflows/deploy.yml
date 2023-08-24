@@ -20,7 +20,7 @@ env:
   SERVER_TASK_DEF_NAME: prod-relayer-task-def
   DAEMON_ECS_SERVICE: prod-relayer-daemon-ecs-service
   DAEMON_TASK_DEF_NAME: prod-relayer-daemon-task-def
-  SERVER_CONTAINER_NAME: relayer-server
+  SERVER_CONTAINER_NAME: relayer
   SERVER_IMAGE_NAME: holonym/holonym-relayer:latest
   DAEMON_CONTAINER_NAME: relayer-daemon
   DAEMON_IMAGE_NAME: holonym/holonym-relayer-daemon:latest
