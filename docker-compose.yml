@@ -5,7 +5,7 @@ services:
     container_name: relayer-server
     build:
       context: .
-      dockerfile: ./Dockerfile.relayer
+      dockerfile: ./Dockerfile.server
     volumes:
       - .:/relayer-server-volume
     # ports:
