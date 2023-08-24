@@ -267,6 +267,7 @@ async function initTreeV2() {
   // level is level in tree (where 0 is level of leaves). 
   // 14 is tree depth. 5 is tree arity. 14^5 is number of leaves.
   for (let index = 0; index < 14 ** 5; index++) {
+    await new Promise(r => setTimeout(r, 20));
     if (process.env.NODE_ENV === 'development') await new Promise(r => setTimeout(r, 200));
     const data = await dynamodb.getLeafAtIndex(index);
     const leaf = data.Item?.LeafValue?.S;
