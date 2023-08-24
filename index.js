@@ -314,7 +314,7 @@ async function insertLeaf(newLeaf, signedLeaf) {
 }
 
 app.post('/v2/addLeaf', async (req, res) => {
-  return res.status(308).header('Location', '/v3/addLeaf').send();
+  // return res.status(308).header('Location', '/v3/addLeaf').send();
 
   if (process.env.HARDHAT_TESTING !== 'true') {
     console.log(new Date().toISOString());
@@ -345,7 +345,7 @@ app.post('/v2/addLeaf', async (req, res) => {
 })
 
 app.get('/v2/getLeaves/', async (req, res) => {
-  return res.status(308).header('Location', '/v3/getLeaves').send();
+  // return res.status(308).header('Location', '/v3/getLeaves').send();
 
   if (!treeV2HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
@@ -354,7 +354,7 @@ app.get('/v2/getLeaves/', async (req, res) => {
 })
 
 app.get('/v2/getTree/', async (req, res) => {
-  return res.status(308).header('Location', '/v3/getTree').send();
+  // return res.status(308).header('Location', '/v3/getTree').send();
 
   if (!treeV2HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
@@ -363,7 +363,7 @@ app.get('/v2/getTree/', async (req, res) => {
 })
 
 app.get('/v2/leafExists/:leaf', async (req, res) => {
-  return res.status(308).header('Location', `/v3/leafExists/${req.params.leaf}`).send();
+  // return res.status(308).header('Location', `/v3/leafExists/${req.params.leaf}`).send();
 
   if (!treeV2HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
@@ -374,7 +374,7 @@ app.get('/v2/leafExists/:leaf', async (req, res) => {
 });
 
 app.get('/v2/rootIsRecent/:root', async (req, res) => {
-  return res.status(308).header('Location', `/v3/rootIsRecent/${req.params.root}`).send();
+  // return res.status(308).header('Location', `/v3/rootIsRecent/${req.params.root}`).send();
 
   if (!treeV2HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
@@ -398,8 +398,9 @@ app.get('/v2/rootIsRecent/:root', async (req, res) => {
 // --------------------------------------------------
 // START v3 stuff
 // 
-// v2 and v3 share the same Leaves table in DynamoDB but
-// use different in-memory Merkle trees.
+// BIG NOTE: v2 and v3 cannot be used simultaneously because they have
+// different in-memory merkle trees. v2 will be sunsetted once v3 is
+// fully tested and deployed.
 // --------------------------------------------------
 
 const addLeafMutexV3 = withTimeout(new Mutex(), 30 * 1000);
@@ -483,6 +484,8 @@ async function insertLeafV3(newLeaf, signedLeaf) {
 }
 
 app.post('/v3/addLeaf', async (req, res) => {
+  return res.status(501).json({ error: "Not implemented" });
+
   if (process.env.HARDHAT_TESTING !== 'true') {
     console.log(new Date().toISOString());
     console.log('v3 addLeaf called with args ', JSON.stringify(req.body, null, 2));
@@ -515,6 +518,8 @@ app.post('/v3/addLeaf', async (req, res) => {
  * finalized tree to a file, and updates the on-chain root to reflect the new finalized tree.
  */
 app.post('/v3/finalize-pending-tree', async (req, res) => {
+  return res.status(501).json({ error: "Not implemented" });
+
   try {
     // Only allow requests with the admin API key
     if (req.headers['x-api-key'] !== process.env.ADMIN_API_KEY) {
@@ -571,6 +576,8 @@ app.post('/v3/finalize-pending-tree', async (req, res) => {
 })
 
 app.get('/v3/getLeaves/', async (req, res) => {
+  return res.status(501).json({ error: "Not implemented" });
+
   if (!treeV3HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
   }
@@ -578,6 +585,8 @@ app.get('/v3/getLeaves/', async (req, res) => {
 })
 
 app.get('/v3/getTree/', async (req, res) => {
+  return res.status(501).json({ error: "Not implemented" });
+
   if (!treeV3HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
   }
@@ -585,6 +594,8 @@ app.get('/v3/getTree/', async (req, res) => {
 })
 
 app.get('/v3/leafExists/:leaf', async (req, res) => {
+  return res.status(501).json({ error: "Not implemented" });
+
   if (!treeV3HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
   }
@@ -594,6 +605,8 @@ app.get('/v3/leafExists/:leaf', async (req, res) => {
 })
 
 app.get('/v3/rootIsRecent/:root', async (req, res) => {
+  return res.status(501).json({ error: "Not implemented" });
+
   if (!treeV3HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
   }
@@ -622,8 +635,8 @@ module.exports.appPromise = new Promise(
     const networks = ["optimism-goerli", "optimism"];
     if (process.env.NODE_ENV === 'development') networks.push('hardhat')
     init(networks)
-    .then(initTreeV3)
-    // .then(initTreeV2)
+    .then(initTreeV2)
+    // .then(initTreeV3)
     .then(resolve(app))
   }
 ); // For testing app with Chai
