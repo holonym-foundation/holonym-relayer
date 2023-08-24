@@ -314,6 +314,8 @@ async function insertLeaf(newLeaf, signedLeaf) {
 }
 
 app.post('/v2/addLeaf', async (req, res) => {
+  return res.status(308).header('Location', '/v3/addLeaf').send();
+
   if (process.env.HARDHAT_TESTING !== 'true') {
     console.log(new Date().toISOString());
     console.log('v2 addLeaf called with args ', JSON.stringify(req.body, null, 2));
@@ -343,6 +345,8 @@ app.post('/v2/addLeaf', async (req, res) => {
 })
 
 app.get('/v2/getLeaves/', async (req, res) => {
+  return res.status(308).header('Location', '/v3/getLeaves').send();
+
   if (!treeV2HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
   }
@@ -350,6 +354,8 @@ app.get('/v2/getLeaves/', async (req, res) => {
 })
 
 app.get('/v2/getTree/', async (req, res) => {
+  return res.status(308).header('Location', '/v3/getTree').send();
+
   if (!treeV2HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
   }
@@ -357,6 +363,8 @@ app.get('/v2/getTree/', async (req, res) => {
 })
 
 app.get('/v2/leafExists/:leaf', async (req, res) => {
+  return res.status(308).header('Location', `/v3/leafExists/${req.params.leaf}`).send();
+
   if (!treeV2HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
   }
@@ -366,6 +374,8 @@ app.get('/v2/leafExists/:leaf', async (req, res) => {
 });
 
 app.get('/v2/rootIsRecent/:root', async (req, res) => {
+  return res.status(308).header('Location', `/v3/rootIsRecent/${req.params.root}`).send();
+
   if (!treeV2HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
   }
@@ -583,6 +593,22 @@ app.get('/v3/leafExists/:leaf', async (req, res) => {
   res.status(200).json({ exists });
 })
 
+app.get('/v3/rootIsRecent/:root', async (req, res) => {
+  if (!treeV3HasBeenInitialized) {
+    return res.status(500).json({ error: "Tree has not been initialized yet" });
+  }
+  const root = req.params.root;
+  
+  let isRecent = false;
+  for (const network of Object.keys(xcontracts["Roots"].contracts)) {
+    const contract = xcontracts["Roots"].contracts[network];
+    isRecent = await contract.rootIsRecent(root);
+    if (isRecent) break;
+  }
+
+  res.status(200).json({ isRecent });
+});
+
 // --------------------------------------------------
 // END v3 stuff
 // --------------------------------------------------
@@ -596,8 +622,8 @@ module.exports.appPromise = new Promise(
     const networks = ["optimism-goerli", "optimism"];
     if (process.env.NODE_ENV === 'development') networks.push('hardhat')
     init(networks)
-    .then(initTreeV2)
     .then(initTreeV3)
+    // .then(initTreeV2)
     .then(resolve(app))
   }
 ); // For testing app with Chai
