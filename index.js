@@ -537,7 +537,7 @@ app.post('/v3/finalize-pending-tree', async (req, res) => {
         rootAtLastBackupV3 = finalizedTree.root;
       }
     } catch (err) {
-      console.error(err)
+      console.error('/v3/finalize-pending-tree error:', err)
       return res.status(500).json({ error: "Failed to write tree to file" });
     }
 
