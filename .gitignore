@@ -1,4 +1,5 @@
 node_modules
+/daemon/target
 *.env
 .env
 out.wtns
