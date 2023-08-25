@@ -15,7 +15,8 @@ struct MerkleTree {
 
 #[derive(Serialize, Deserialize, Debug)]
 struct FinalizeTreeResponse {
-    success: bool
+    success: Option<bool>,
+    error: Option<String>
 }
 
 /// Tell the relayer to write the merkle tree to a file.
