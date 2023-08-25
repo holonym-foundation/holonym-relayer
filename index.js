@@ -311,7 +311,7 @@ async function insertLeaf(newLeaf, signedLeaf) {
 }
 
 app.post('/v2/addLeaf', async (req, res) => {
-  // return res.status(308).header('Location', '/v3/addLeaf').send();
+  return res.status(308).header('Location', '/v3/addLeaf').send();
 
   if (process.env.HARDHAT_TESTING !== 'true') {
     console.log(new Date().toISOString());
@@ -342,7 +342,7 @@ app.post('/v2/addLeaf', async (req, res) => {
 })
 
 app.get('/v2/getLeaves/', async (req, res) => {
-  // return res.status(308).header('Location', '/v3/getLeaves').send();
+  return res.status(308).header('Location', '/v3/getLeaves').send();
 
   if (!treeV2HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
@@ -351,7 +351,7 @@ app.get('/v2/getLeaves/', async (req, res) => {
 })
 
 app.get('/v2/getTree/', async (req, res) => {
-  // return res.status(308).header('Location', '/v3/getTree').send();
+  return res.status(308).header('Location', '/v3/getTree').send();
 
   if (!treeV2HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
@@ -360,7 +360,7 @@ app.get('/v2/getTree/', async (req, res) => {
 })
 
 app.get('/v2/leafExists/:leaf', async (req, res) => {
-  // return res.status(308).header('Location', `/v3/leafExists/${req.params.leaf}`).send();
+  return res.status(308).header('Location', `/v3/leafExists/${req.params.leaf}`).send();
 
   if (!treeV2HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
@@ -371,7 +371,7 @@ app.get('/v2/leafExists/:leaf', async (req, res) => {
 });
 
 app.get('/v2/rootIsRecent/:root', async (req, res) => {
-  // return res.status(308).header('Location', `/v3/rootIsRecent/${req.params.root}`).send();
+  return res.status(308).header('Location', `/v3/rootIsRecent/${req.params.root}`).send();
 
   if (!treeV2HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
@@ -434,6 +434,7 @@ async function initTreeV3FromDatabase() {
   // level is level in tree (where 0 is level of leaves). 
   // 14 is tree depth. 5 is tree arity. 14^5 is number of leaves.
   for (let index = 0; index < 14 ** 5; index++) {
+    await new Promise(r => setTimeout(r, 20));
     if (process.env.NODE_ENV === 'development') await new Promise(r => setTimeout(r, 200));
     const data = await dynamodb.getLeafAtIndex(index);
     const leaf = data.Item?.LeafValue?.S;
@@ -446,17 +447,20 @@ async function initTreeV3FromDatabase() {
 async function initTreeV3() {
   console.log("Initializing in-memory merkle tree for v3")
   console.time(`tree-initialization-v3`)
-  // Initialize tree from DynamoDB backup
-  try {
-    await dynamodb.createLeavesTableIfNotExists();
 
-    const initializedFromBackup = await initTreeV3FromBackupFile();
-    if (!initializedFromBackup) {
-      await initTreeV3FromDatabase()
-    }
-  } catch (err) {
-    console.error("initTreeV3: ", err);
-  }
+  await dynamodb.createLeavesTableIfNotExists();
+
+  // NOTE: Backing up to a file is commented out for now because it is not necessary
+  // for performance reasons yet. In the future, once the tree includes 100,000+
+  // leaves, we might want to revisit this. However, we probably won't need file
+  // backups until the leaf count is in the millions.
+  // const initializedFromBackup = await initTreeV3FromBackupFile();
+  // if (!initializedFromBackup) {
+  //   await initTreeV3FromDatabase()
+  // }
+
+  await initTreeV3FromDatabase()
+
   treeV3HasBeenInitialized = true;
   console.log("Merkle tree in memory has been initialized for v3")
   console.timeEnd(`tree-initialization-v3`)
@@ -481,7 +485,7 @@ async function insertLeafV3(newLeaf, signedLeaf) {
 }
 
 app.post('/v3/addLeaf', async (req, res) => {
-  return res.status(501).json({ error: "Not implemented" });
+  // return res.status(501).json({ error: "Not implemented" });
 
   if (process.env.HARDHAT_TESTING !== 'true') {
     console.log(new Date().toISOString());
@@ -515,7 +519,7 @@ app.post('/v3/addLeaf', async (req, res) => {
  * finalized tree to a file, and updates the on-chain root to reflect the new finalized tree.
  */
 app.post('/v3/finalize-pending-tree', async (req, res) => {
-  return res.status(501).json({ error: "Not implemented" });
+  // return res.status(501).json({ error: "Not implemented" });
 
   try {
     // Only allow requests with the admin API key
@@ -530,18 +534,22 @@ app.post('/v3/finalize-pending-tree', async (req, res) => {
     // call is executing? If so, we should use a mutex or something to prevent this case.
     const finalizedTree = cloneDeep(softFinalizedTreeV3)
     
-    try {
-      if (finalizedTree.root !== rootAtLastBackupV3) {
-        await fsPromises.writeFile(
-          `${backupTreePath}/tree.json`, 
-          JSON.stringify(finalizedTree)
-        );
-        rootAtLastBackupV3 = finalizedTree.root;
-      }
-    } catch (err) {
-      console.error('/v3/finalize-pending-tree error:', err)
-      return res.status(500).json({ error: "Failed to write tree to file" });
-    }
+    // NOTE: Backing up to a file is commented out for now because it is not necessary
+    // for performance reasons yet. In the future, once the tree includes 100,000+
+    // leaves, we might want to revisit this. However, we probably won't need file
+    // backups until the leaf count is in the millions.
+    // try {
+    //   if (finalizedTree.root !== rootAtLastBackupV3) {
+    //     await fsPromises.writeFile(
+    //       `${backupTreePath}/tree.json`, 
+    //       JSON.stringify(finalizedTree)
+    //     );
+    //     rootAtLastBackupV3 = finalizedTree.root;
+    //   }
+    // } catch (err) {
+    //   console.error('/v3/finalize-pending-tree error:', err)
+    //   return res.status(500).json({ error: "Failed to write tree to file" });
+    // }
 
     const rootOnNetworkIsRecent = {};
     for (const network of Object.keys(xcontracts["Roots"].contracts)) {
@@ -573,7 +581,7 @@ app.post('/v3/finalize-pending-tree', async (req, res) => {
 })
 
 app.get('/v3/getLeaves/', async (req, res) => {
-  return res.status(501).json({ error: "Not implemented" });
+  // return res.status(501).json({ error: "Not implemented" });
 
   if (!treeV3HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
@@ -582,7 +590,7 @@ app.get('/v3/getLeaves/', async (req, res) => {
 })
 
 app.get('/v3/getTree/', async (req, res) => {
-  return res.status(501).json({ error: "Not implemented" });
+  // return res.status(501).json({ error: "Not implemented" });
 
   if (!treeV3HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
@@ -591,7 +599,7 @@ app.get('/v3/getTree/', async (req, res) => {
 })
 
 app.get('/v3/leafExists/:leaf', async (req, res) => {
-  return res.status(501).json({ error: "Not implemented" });
+  // return res.status(501).json({ error: "Not implemented" });
 
   if (!treeV3HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
@@ -602,7 +610,7 @@ app.get('/v3/leafExists/:leaf', async (req, res) => {
 })
 
 app.get('/v3/rootIsRecent/:root', async (req, res) => {
-  return res.status(501).json({ error: "Not implemented" });
+  // return res.status(501).json({ error: "Not implemented" });
 
   if (!treeV3HasBeenInitialized) {
     return res.status(500).json({ error: "Tree has not been initialized yet" });
@@ -633,7 +641,7 @@ module.exports.appPromise = new Promise(
     if (process.env.NODE_ENV === 'development') networks.push('hardhat')
     init(networks)
     .then(initTreeV2)
-    // .then(initTreeV3)
+    .then(initTreeV3)
     .then(resolve(app))
   }
 ); // For testing app with Chai
