@@ -529,10 +529,14 @@ app.post('/v3/finalize-pending-tree', async (req, res) => {
 
     if (!treeV3HasBeenInitialized) throw new Error("Tree has not been initialized yet");
 
-    // TODO: CT: Question: Is it possible for softFinalizedTreeV3 to be in the process
+    // TODO: Question: Is it possible for softFinalizedTreeV3 to be in the process
     // of updating (due to a call to /v3/addLeaf) at the same time that this cloneDeep
-    // call is executing? If so, we should use a mutex or something to prevent this case.
-    const finalizedTree = cloneDeep(softFinalizedTreeV3)
+    // call is executing? If so, we should keep the mutex to prevent this case. If not,
+    // we should remove the mutex to improve performance.
+    let finalizedTree;
+    await addLeafMutexV3.runExclusive(() => {
+      finalizedTree = cloneDeep(softFinalizedTreeV3)
+    });
     
     // NOTE: Backing up to a file is commented out for now because it is not necessary
     // for performance reasons yet. In the future, once the tree includes 100,000+
