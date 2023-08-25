@@ -50,7 +50,6 @@ jobs:
   #         push: true
   #         tags: ${{ env.SERVER_IMAGE_NAME }}
 
-  # TODO: Uncomment once we are ready to deploy daemon
   docker-build-push-daemon:
     name: Build and push relayer daemon
     runs-on: ubuntu-latest
@@ -109,38 +108,37 @@ jobs:
   #         cluster: ${{ env.ECS_CLUSTER }}
   #         wait-for-service-stability: true
 
-  # TODO: Uncomment once we are ready to deploy daemon
-  # aws-deploy-daemon:
-  #   name: Deploy to AWS
-  #   needs: docker-build-push-daemon
-  #   runs-on: ubuntu-latest
+  aws-deploy-daemon:
+    name: Deploy daemon to AWS
+    needs: docker-build-push-daemon
+    runs-on: ubuntu-latest
 
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v3
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
 
-  #     - name: Configure AWS credentials
-  #       uses: aws-actions/configure-aws-credentials@v1
-  #       with:
-  #         role-to-assume: ${{ env.IAM_ROLE }}
-  #         aws-region: ${{ env.AWS_REGION }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: ${{ env.IAM_ROLE }}
+          aws-region: ${{ env.AWS_REGION }}
 
-  #     - name: Download ECS task definition
-  #       run: |
-  #         aws ecs describe-task-definition --task-definition $DAEMON_TASK_DEF_NAME --query taskDefinition > task-definition.json
+      - name: Download ECS task definition
+        run: |
+          aws ecs describe-task-definition --task-definition $DAEMON_TASK_DEF_NAME --query taskDefinition > task-definition.json
 
-  #     - name: Fill in the new image ID in the Amazon ECS task definition
-  #       id: task-def
-  #       uses: aws-actions/amazon-ecs-render-task-definition@v1
-  #       with:
-  #         task-definition: task-definition.json
-  #         container-name: ${{ env.DAEMON_CONTAINER_NAME }}
-  #         image: ${{ env.DAEMON_IMAGE_NAME }}
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: ${{ env.DAEMON_CONTAINER_NAME }}
+          image: ${{ env.DAEMON_IMAGE_NAME }}
 
-  #     - name: Deploy Amazon ECS task definition
-  #       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-  #       with:
-  #         task-definition: ${{ steps.task-def.outputs.task-definition }}
-  #         service: ${{ env.DAEMON_ECS_SERVICE }}
-  #         cluster: ${{ env.ECS_CLUSTER }}
-  #         wait-for-service-stability: true
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.DAEMON_ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
