@@ -1,7 +1,8 @@
 const  { randomBytes } = require('crypto')
 const { NonceManager } = require("@ethersproject/experimental");
 const { ethers } = require('ethers')
-const { nftAddresses, nftABIs } = require('../constants/misc');
+const { nftAddresses } = require('../constants/misc');
+const nftABIData = require('../constants/abis/nft.json');
 const { callContractWithNonceManager } = require('../xccontract');
 
 const optimismProvider = new ethers.providers.AlchemyProvider(
@@ -17,7 +18,7 @@ const nftNonceManager = new NonceManager(nftWallet);
  */
 const mint = async (proofContractName, recipient) => {
   const nftAddr = nftAddresses[proofContractName];
-  const nftABI = nftABIs[proofContractName];
+  const nftABI = nftABIData.abi;
   const nftContract = new ethers.Contract(nftAddr, nftABI, nftWallet);
 
   const tokenid = '0x' + randomBytes(32).toString('hex');

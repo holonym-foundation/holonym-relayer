@@ -1,7 +1,3 @@
-const SybilGovIDABI = require('./abis/SybilResistanceV2.json');
-const SybilPhoneABI = require('./abis/SybilResistancePhone.json');
-const IsUSResidentV2ABI = require('./abis/IsUSResidentV2.json');
-
 module.exports.backupTreePath= './backup-trees';
 
 module.exports.whitelistedIssuers = [
@@ -15,10 +11,4 @@ module.exports.nftAddresses = {
   SybilResistanceV2: '0x7a81f2f88b0ee30ee0927c9f672487689c6dd7ce',
   SybilResistancePhone: '0xe337ad5aa1cb84e12a7aab85aed1ab6cb44c4a8e',
   IsUSResidentV2: '0x25b42489b7647863918af127aaaa3243ec605aca'
-}
-
-module.exports.nftABIs = {
-  SybilResistanceV2: SybilGovIDABI,
-  SybilResistancePhone: SybilPhoneABI,
-  IsUSResidentV2: IsUSResidentV2ABI
 }
