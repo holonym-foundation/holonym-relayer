@@ -16,6 +16,7 @@ const { backupTreePath, whitelistedIssuers } = require('./constants/misc');
 const { initAddresses, getAddresses } = require("./utils/contract-addresses");
 const { poseidonHashQuinary } = require('./utils/utils');
 const { verifyProofCircom } = require('./utils/proofs');
+const { mint } = require('./utils/nft');
 const dynamodb = require('./dynamodb');
 
 const corsOpts = {
@@ -181,6 +182,14 @@ app.post('/writeProof/:proofContractName/:network', async (req, res) => {
   console.log(`writeProof/${req.params.proofContractName}/${req.params.network} endpoint called with args `, JSON.stringify(req.body, null, 2));
   try {
     const txReceipt = await writeProof(req.params.proofContractName, req.params.network, req.body.writeProofArgs);
+    
+    if (process.env.NODE_ENV !== "development") {
+      const sender = '0x' + req.body.writeProofArgs.inputs[1].slice(-40)
+      mint(req.params.proofContractName, sender)
+        .then((tx) => console.log("minted NFT. tx:", tx))
+        .catch((err) => console.error("mint error:", err));  
+    }
+
     res.status(200).json(txReceipt);
   } catch(e) {
     console.error(e);
