@@ -1,6 +1,8 @@
 require('dotenv').config()
 const fsPromises = require('node:fs/promises');
+const { randomBytes } = require('crypto');
 const { ethers } = require('./utils/get-ethers.js');
+const { NonceManager } = require("@ethersproject/experimental");
 const express = require('express')
 const app = express()
 const cors = require('cors')
@@ -12,7 +14,8 @@ const { cloneDeep } = require('lodash')
 const { CreateXChainContract, callContractWithNonceManager } = require('./xccontract')
 const { IncrementalMerkleTree } = require("@zk-kit/incremental-merkle-tree");
 const { poseidon } = require('circomlibjs-old');
-const { backupTreePath, whitelistedIssuers } = require('./constants/misc');
+const { backupTreePath, whitelistedIssuers, nftAddresses } = require('./constants/misc');
+const nftABIData = require('./constants/abis/nft.json');
 const { initAddresses, getAddresses } = require("./utils/contract-addresses");
 const { poseidonHashQuinary } = require('./utils/utils');
 const { verifyProofCircom } = require('./utils/proofs');
@@ -643,6 +646,71 @@ app.get('/v3/rootIsRecent/:root', async (req, res) => {
 // --------------------------------------------------
 // END v3 stuff
 // --------------------------------------------------
+
+/**
+ * This endpoint is only intended to be used temporarily. In the migration
+ * back to using this relayer to submit proofs, some users did not receive
+ * NFTs. This endpoint allows us to manually mint NFTs to those users.
+ */
+app.post('mint/:proofContractName/:recipient', async (req, res) => {
+  try {
+    const proofContractName = req.params.proofContractName;
+    const recipient = req.params.recipient;
+
+    // Get proof contract
+    const proofContract = xcontracts[proofContractName].contracts["optimism"];
+    if (!proofContract) return res.status(400).json({ error: "Invalid proofContractName" });
+
+    // Get nftContract
+    const optimismProvider = new ethers.providers.AlchemyProvider(
+      "optimism",
+      process.env.ALCHEMY_APIKEY
+    )
+    const nftWallet = new ethers.Wallet(process.env.MINTER_PRIVATE_KEY, optimismProvider);
+    const nftNonceManager = new NonceManager(nftWallet);
+    const nftAddr = nftAddresses[proofContractName];
+    const nftABI = nftABIData.abi;
+    const nftContract = new ethers.Contract(nftAddr, nftABI, nftWallet);
+  
+    const nftBalance = await nftContract.balanceOf(recipient);
+
+    // Make sure user doesn't already have the NFT
+    if (nftBalance.gt(0)) {
+      return res.status(400).json({ error: "User already has NFT" });
+    }
+
+    // Make sure user has proven uniqueness or US residency
+    if (proofContractName.includes("Sybil")) {
+      const defaultActionId = "123456789"
+      const isUniqueForAction = await proofContract.isUniqueForAction(recipient, defaultActionId);
+  
+      if (!isUniqueForAction) {
+        return res.status(400).json({ error: "User has not proven uniqueness" }); 
+      } 
+    } else if (proofContractName.includes("USResident")) {
+      const isUSResident = await proofContract.usResidency(recipient)
+
+      if (!isUSResident) {
+        return res.status(400).json({ error: "User is not a US resident" });
+      }
+    }
+
+    // User has passed checks. Mint their NFT.
+    const tokenid = '0x' + randomBytes(32).toString('hex');
+
+    const tx = await callContractWithNonceManager(
+      nftContract,
+      "safeMint",
+      nftNonceManager,
+      [recipient, tokenid]
+    )
+    
+    return res.status(200).json(tx);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "An unexpected error occurred" })
+  }
+})
 
 app.listen(port, () => {
   console.log('Started server on port', port);
