@@ -652,7 +652,7 @@ app.get('/v3/rootIsRecent/:root', async (req, res) => {
  * back to using this relayer to submit proofs, some users did not receive
  * NFTs. This endpoint allows us to manually mint NFTs to those users.
  */
-app.post('mint/:proofContractName/:recipient', async (req, res) => {
+app.post('/mint/:proofContractName/:recipient', async (req, res) => {
   try {
     const proofContractName = req.params.proofContractName;
     const recipient = req.params.recipient;
