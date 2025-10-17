@@ -1,3 +1,7 @@
+# ⚠️ DEPRECATED
+
+**This repository is deprecated and no longer used or maintained.**
+
 ## Setup
 
 First, install Node.js 16 and Rust. We recommend using [nvm](https://github.com/nvm-sh/nvm) to manage your Node.js versions.

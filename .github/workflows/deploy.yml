@@ -24,119 +24,126 @@ env:
   SERVER_IMAGE_NAME: holonym/holonym-relayer:latest
   DAEMON_CONTAINER_NAME: relayer-daemon
   DAEMON_IMAGE_NAME: holonym/holonym-relayer-daemon:latest
-  IAM_ROLE: arn:aws:iam::187023981994:role/github-actions-role
+  IAM_ROLE: secrets.IAM_ROLE
 
 jobs:
-  # Build Docker image and push to Docker Hub
-  docker-build-push-server:
-    name: Build and push relayer server
+  hi:
+    name: Says hi
     runs-on: ubuntu-latest
-    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-      - name: Build and push
-        uses: docker/build-push-action@v3
-        with:
-          file: ./Dockerfile.server
-          push: true
-          tags: ${{ env.SERVER_IMAGE_NAME }}
+      - name: Say hi
+        run: echo "hi"
 
-  docker-build-push-daemon:
-    name: Build and push relayer daemon
-    runs-on: ubuntu-latest
-    # if: ${{ github.event.workflow_run.conclusion == 'success' }}
-    steps:
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v2
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-      - name: Login to DockerHub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-      - name: Build and push
-        uses: docker/build-push-action@v3
-        with:
-          file: ./Dockerfile.daemon
-          push: true
-          tags: ${{ env.DAEMON_IMAGE_NAME }}
+  # # Build Docker image and push to Docker Hub
+  # docker-build-push-server:
+  #   name: Build and push relayer server
+  #   runs-on: ubuntu-latest
+  #   # if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  #   steps:
+  #     - name: Set up QEMU
+  #       uses: docker/setup-qemu-action@v2
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v2
+  #     - name: Login to DockerHub
+  #       uses: docker/login-action@v2
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_PASSWORD }}
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v3
+  #       with:
+  #         file: ./Dockerfile.server
+  #         push: true
+  #         tags: ${{ env.SERVER_IMAGE_NAME }}
 
-  # Deploy to Amazon ECS
-  aws-deploy-server:
-    name: Deploy to AWS
-    needs: docker-build-push-server
-    runs-on: ubuntu-latest
+  # docker-build-push-daemon:
+  #   name: Build and push relayer daemon
+  #   runs-on: ubuntu-latest
+  #   # if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  #   steps:
+  #     - name: Set up QEMU
+  #       uses: docker/setup-qemu-action@v2
+  #     - name: Set up Docker Buildx
+  #       uses: docker/setup-buildx-action@v2
+  #     - name: Login to DockerHub
+  #       uses: docker/login-action@v2
+  #       with:
+  #         username: ${{ secrets.DOCKERHUB_USERNAME }}
+  #         password: ${{ secrets.DOCKERHUB_PASSWORD }}
+  #     - name: Build and push
+  #       uses: docker/build-push-action@v3
+  #       with:
+  #         file: ./Dockerfile.daemon
+  #         push: true
+  #         tags: ${{ env.DAEMON_IMAGE_NAME }}
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  # # Deploy to Amazon ECS
+  # aws-deploy-server:
+  #   name: Deploy to AWS
+  #   needs: docker-build-push-server
+  #   runs-on: ubuntu-latest
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          role-to-assume: ${{ env.IAM_ROLE }}
-          aws-region: ${{ env.AWS_REGION }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-      - name: Download ECS task definition
-        run: |
-          aws ecs describe-task-definition --task-definition $SERVER_TASK_DEF_NAME --query taskDefinition > task-definition.json
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v1
+  #       with:
+  #         role-to-assume: ${{ env.IAM_ROLE }}
+  #         aws-region: ${{ env.AWS_REGION }}
 
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          container-name: ${{ env.SERVER_CONTAINER_NAME }}
-          image: ${{ env.SERVER_IMAGE_NAME }}
+  #     - name: Download ECS task definition
+  #       run: |
+  #         aws ecs describe-task-definition --task-definition $SERVER_TASK_DEF_NAME --query taskDefinition > task-definition.json
 
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.SERVER_ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+  #     - name: Fill in the new image ID in the Amazon ECS task definition
+  #       id: task-def
+  #       uses: aws-actions/amazon-ecs-render-task-definition@v1
+  #       with:
+  #         task-definition: task-definition.json
+  #         container-name: ${{ env.SERVER_CONTAINER_NAME }}
+  #         image: ${{ env.SERVER_IMAGE_NAME }}
 
-  aws-deploy-daemon:
-    name: Deploy daemon to AWS
-    needs: docker-build-push-daemon
-    runs-on: ubuntu-latest
+  #     - name: Deploy Amazon ECS task definition
+  #       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+  #       with:
+  #         task-definition: ${{ steps.task-def.outputs.task-definition }}
+  #         service: ${{ env.SERVER_ECS_SERVICE }}
+  #         cluster: ${{ env.ECS_CLUSTER }}
+  #         wait-for-service-stability: true
 
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+  # aws-deploy-daemon:
+  #   name: Deploy daemon to AWS
+  #   needs: docker-build-push-daemon
+  #   runs-on: ubuntu-latest
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          role-to-assume: ${{ env.IAM_ROLE }}
-          aws-region: ${{ env.AWS_REGION }}
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v3
 
-      - name: Download ECS task definition
-        run: |
-          aws ecs describe-task-definition --task-definition $DAEMON_TASK_DEF_NAME --query taskDefinition > task-definition.json
+  #     - name: Configure AWS credentials
+  #       uses: aws-actions/configure-aws-credentials@v1
+  #       with:
+  #         role-to-assume: ${{ env.IAM_ROLE }}
+  #         aws-region: ${{ env.AWS_REGION }}
 
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: task-definition.json
-          container-name: ${{ env.DAEMON_CONTAINER_NAME }}
-          image: ${{ env.DAEMON_IMAGE_NAME }}
+  #     - name: Download ECS task definition
+  #       run: |
+  #         aws ecs describe-task-definition --task-definition $DAEMON_TASK_DEF_NAME --query taskDefinition > task-definition.json
 
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.DAEMON_ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+  #     - name: Fill in the new image ID in the Amazon ECS task definition
+  #       id: task-def
+  #       uses: aws-actions/amazon-ecs-render-task-definition@v1
+  #       with:
+  #         task-definition: task-definition.json
+  #         container-name: ${{ env.DAEMON_CONTAINER_NAME }}
+  #         image: ${{ env.DAEMON_IMAGE_NAME }}
+
+  #     - name: Deploy Amazon ECS task definition
+  #       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+  #       with:
+  #         task-definition: ${{ steps.task-def.outputs.task-definition }}
+  #         service: ${{ env.DAEMON_ECS_SERVICE }}
+  #         cluster: ${{ env.ECS_CLUSTER }}
+  #         wait-for-service-stability: true
